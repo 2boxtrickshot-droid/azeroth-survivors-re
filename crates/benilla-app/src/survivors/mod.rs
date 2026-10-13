@@ -6,11 +6,15 @@
 
 mod abilities;
 mod auto;
+mod cards;
 mod data;
 mod enemies;
+mod grade;
 mod hero;
 mod hud;
+mod menu;
 mod minimap;
+mod mobility;
 mod units;
 
 use benilla_world::schedule::WorldStage;
@@ -24,7 +28,8 @@ use data::{AbilityDef, ClassDef, PassiveDef, Stat};
 pub(crate) static ACTIVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 pub(crate) fn active() -> bool {
-    ACTIVE.load(std::sync::atomic::Ordering::Relaxed) || crate::webenv::var("WOW_SURVIVORS").is_some()
+    ACTIVE.load(std::sync::atomic::Ordering::Relaxed)
+        || crate::webenv::var("WOW_SURVIVORS").is_some()
 }
 
 pub(crate) struct SurvivorsPlugin;
@@ -33,14 +38,17 @@ impl Plugin for SurvivorsPlugin {
     fn build(&self, app: &mut App) {
         // Present before `OnEnter(InWorld)`, where the UI lifecycle decides not to load FrameXML.
         app.insert_resource(crate::run_mode::CaptureMode)
+            .add_plugins(grade::plugin)
             .init_state::<Phase>()
             .init_resource::<Rng>()
             .init_resource::<Selection>()
             .init_resource::<Run>()
             .init_resource::<hero::CamRig>()
+            .init_resource::<hero::AimPoint>()
             .init_resource::<abilities::PendingHits>()
             .init_resource::<enemies::Spawner>()
             .init_resource::<hud::Offer>()
+            .init_resource::<cards::PendingPick>()
             .add_message::<abilities::Hit>()
             .add_message::<enemies::Loot>()
             .add_plugins(bevy::ui_render::UiMaterialPlugin::<hud::SweepUiMaterial>::default())
@@ -48,7 +56,12 @@ impl Plugin for SurvivorsPlugin {
             .add_systems(Update, hero::daylight)
             .add_systems(
                 Update,
-                (hero::drive_hero, hero::place_camera)
+                (
+                    hero::aim_cursor,
+                    mobility::cast_mobility,
+                    hero::drive_hero,
+                    hero::place_camera,
+                )
                     .chain()
                     .in_set(WorldStage::Input),
             )
@@ -67,7 +80,9 @@ impl Plugin for SurvivorsPlugin {
                 )
                     .chain()
                     .after(WorldStage::Input)
-                    .run_if(in_state(Phase::Playing)),
+                    .run_if(in_state(Phase::Playing))
+                    // Entering a battleground raises its loading screen: the run waits behind it.
+                    .run_if(|l: Res<crate::loading_screen::LoadingScreen>| !l.covering()),
             )
             .add_systems(
                 Update,
@@ -81,10 +96,18 @@ impl Plugin for SurvivorsPlugin {
                     hud::buttons,
                     hud::keys,
                     hud::refresh_menu,
-                    hud::refresh_offer,
+                    menu::restore_pick,
+                    menu::build_menu,
+                    menu::menu_clicks,
+                    menu::refresh_menu_ui.before(crate::glue::GlueVisuals),
+                    cards::deal_cards,
+                    cards::choose_card,
+                    cards::animate_cards,
                     hud::refresh_hud,
+                    hud::refresh_results,
                     hud::fill_icons,
                     hud::update_cooldown_sweeps,
+                    hud::refresh_mobility,
                     hud::show_panels,
                 )
                     .chain()
@@ -145,6 +168,10 @@ pub(super) struct Selection {
     pub look: Option<usize>,
     /// An index into [`data::MAPS`].
     pub map: usize,
+    /// The battleground the world is standing in: the last one entered (or the saved pick at
+    /// boot). Picking another at the menu changes only `map`, so the menu hero stays put and no
+    /// loading screen rises until Enter World.
+    pub stage: usize,
     /// Bumped on every change, so the menu rebuilds once.
     pub version: u32,
 }
@@ -156,6 +183,10 @@ impl Selection {
 
     pub fn map_def(&self) -> &'static data::MapDef {
         &data::MAPS[self.map.min(data::MAPS.len() - 1)]
+    }
+
+    pub fn stage_def(&self) -> &'static data::MapDef {
+        &data::MAPS[self.stage.min(data::MAPS.len() - 1)]
     }
 }
 
@@ -225,6 +256,8 @@ pub(super) struct Run {
     pub thorns_spell: u32,
     pub heal_rate: f32,
     pub heal_t: f32,
+    /// The class mobility's cooldown and running effect.
+    mobile: mobility::MobilityState,
     pub pending_levels: u32,
     pub bosses: u32,
     pub rings: u32,
@@ -259,6 +292,7 @@ impl Default for Run {
             thorns_spell: 0,
             heal_rate: 0.0,
             heal_t: 0.0,
+            mobile: mobility::MobilityState::default(),
             pending_levels: 0,
             bosses: 0,
             rings: 0,

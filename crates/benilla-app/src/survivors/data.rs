@@ -19,7 +19,6 @@ pub(crate) struct ClassDef {
     pub weapons: &'static [Weapon],
     /// The sheath state the hero fights in: 1 melee, 2 ranged.
     pub sheath: u8,
-    pub blurb: &'static str,
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -96,7 +95,6 @@ pub(crate) struct AbilityDef {
     /// The area's own visual hangs overhead and would hide the field from the camera, so the
     /// area plays the spell's impact on whatever it hits instead.
     pub overhead: bool,
-    pub desc: &'static str,
 }
 
 const fn ab(key: &'static str, spell: u32, kind: Kind) -> AbilityDef {
@@ -115,7 +113,6 @@ const fn ab(key: &'static str, spell: u32, kind: Kind) -> AbilityDef {
         mark: 0,
         totem: (0, 0),
         overhead: false,
-        desc: "",
     }
 }
 
@@ -135,8 +132,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 1.3,
             range: 24.0,
             effect: Effect::Slow(0.5, 2.5),
-            mark: 116,
-            desc: "Hurls a bolt of frost at the nearest enemy, slowing it."
+            mark: 116
         }
     ),
     ability!(
@@ -146,8 +142,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             damage: 20.0,
             cooldown: 2.4,
             range: 26.0,
-            radius: 3.5,
-            desc: "A ball of fire that bursts on impact, burning nearby enemies."
+            radius: 3.5
         }
     ),
     ability!(
@@ -157,8 +152,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             damage: 6.0,
             cooldown: 1.9,
             range: 22.0,
-            count: 3,
-            desc: "Launches arcane missiles at several nearby enemies."
+            count: 3
         }
     ),
     ability!(
@@ -169,8 +163,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 7.0,
             radius: 9.0,
             effect: Effect::Root(2.5),
-            mark: 122,
-            desc: "Blasts enemies around you with frost, freezing them in place."
+            mark: 122
         }
     ),
     ability!(
@@ -179,8 +172,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Nova {
             damage: 10.0,
             cooldown: 2.8,
-            radius: 7.0,
-            desc: "Arcane energy erupts around you."
+            radius: 7.0
         }
     ),
     ability!(
@@ -192,8 +184,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             range: 20.0,
             radius: 7.0,
             duration: 6.0,
-            effect: Effect::Slow(0.6, 1.5),
-            desc: "Ice shards rain on the thickest pack, slowing everything inside."
+            effect: Effect::Slow(0.6, 1.5)
         }
     ),
     ability!(
@@ -204,8 +195,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 8.0,
             range: 20.0,
             radius: 5.0,
-            duration: 4.0,
-            desc: "Calls down a pillar of fire that keeps burning."
+            duration: 4.0
         }
     ),
     ability!(
@@ -214,8 +204,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Strike {
             damage: 26.0,
             cooldown: 3.5,
-            range: 18.0,
-            desc: "Blasts the nearest enemy with fire."
+            range: 18.0
         }
     ),
     ability!(
@@ -226,8 +215,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 4.5,
             radius: 11.0,
             effect: Effect::Slow(0.5, 3.0),
-            mark: 120,
-            desc: "A cone of frost toward the closest enemy."
+            mark: 120
         }
     ),
     ability!(
@@ -237,8 +225,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             damage: 18.0,
             cooldown: 6.5,
             radius: 8.0,
-            effect: Effect::Slow(0.6, 2.0),
-            desc: "A wave of flame bursts out from you."
+            effect: Effect::Slow(0.6, 2.0)
         }
     ),
     ability!(
@@ -249,8 +236,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             dot: 6.0,
             duration: 6.0,
             cooldown: 6.0,
-            range: 30.0,
-            desc: "A huge fiery boulder at the toughest enemy in range."
+            range: 30.0
         }
     ),
     // --- Warrior ---
@@ -261,8 +247,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             damage: 14.0,
             cooldown: 1.1,
             range: 5.5,
-            count: 3,
-            desc: "Strikes the closest enemies in front of you."
+            count: 3
         }
     ),
     ability!(
@@ -271,8 +256,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Melee {
             damage: 28.0,
             cooldown: 1.6,
-            range: 5.5,
-            desc: "A mighty blow on the closest enemy."
+            range: 5.5
         }
     ),
     ability!(
@@ -281,8 +265,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Nova {
             damage: 16.0,
             cooldown: 4.0,
-            radius: 7.0,
-            desc: "Spins, striking every enemy around you."
+            radius: 7.0
         }
     ),
     ability!(
@@ -293,8 +276,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 5.0,
             radius: 8.0,
             effect: Effect::Slow(0.5, 3.0),
-            mark: 6343,
-            desc: "Thunder slows and damages enemies around you."
+            mark: 6343
         }
     ),
     ability!(
@@ -303,8 +285,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Aura {
             damage: 6.0,
             cooldown: 0.6,
-            radius: 5.5,
-            desc: "Your blows carry into every enemy close around you."
+            radius: 5.5
         }
     ),
     ability!(
@@ -314,8 +295,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             damage: 4.0,
             cooldown: 8.0,
             radius: 11.0,
-            effect: Effect::Weaken(0.5, 5.0),
-            desc: "Halves the damage of enemies around you."
+            effect: Effect::Weaken(0.5, 5.0)
         }
     ),
     ability!(
@@ -326,8 +306,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 2.0,
             range: 8.0,
             count: 2,
-            effect: Effect::Execute(0.3),
-            desc: "Finishes off weakened enemies outright."
+            effect: Effect::Execute(0.3)
         }
     ),
     ability!(
@@ -336,8 +315,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Melee {
             damage: 48.0,
             cooldown: 3.0,
-            range: 6.0,
-            desc: "A vicious strike on the closest enemy."
+            range: 6.0
         }
     ),
     ability!(
@@ -346,8 +324,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Thorns {
             damage: 14.0,
             cooldown: 18.0,
-            duration: 8.0,
-            desc: "Strikes back at every enemy that hits you."
+            duration: 8.0
         }
     ),
     // --- Rogue ---
@@ -357,8 +334,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Melee {
             damage: 15.0,
             cooldown: 0.85,
-            range: 5.5,
-            desc: "A quick strike on the closest enemy."
+            range: 5.5
         }
     ),
     ability!(
@@ -367,8 +343,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Melee {
             damage: 42.0,
             cooldown: 2.8,
-            range: 5.5,
-            desc: "A finishing move that tears into the closest enemy."
+            range: 5.5
         }
     ),
     ability!(
@@ -377,8 +352,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Nova {
             damage: 11.0,
             cooldown: 3.0,
-            radius: 6.0,
-            desc: "Your blades lash out at every nearby enemy."
+            radius: 6.0
         }
     ),
     ability!(
@@ -389,8 +363,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 3.5,
             range: 10.0,
             count: 3,
-            duration: 6.0,
-            desc: "Opens bleeding wounds on several enemies."
+            duration: 6.0
         }
     ),
     ability!(
@@ -402,8 +375,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             range: 6.0,
             count: 2,
             effect: Effect::Stun(2.0),
-            mark: 1776,
-            desc: "Gouges the closest enemies, stunning them."
+            mark: 1776
         }
     ),
     ability!(
@@ -414,8 +386,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 6.0,
             range: 6.0,
             effect: Effect::Stun(3.5),
-            mark: 408,
-            desc: "Stuns the closest enemy."
+            mark: 408
         }
     ),
     // --- Priest ---
@@ -425,8 +396,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Strike {
             damage: 14.0,
             cooldown: 1.2,
-            range: 20.0,
-            desc: "Smites the nearest enemy with holy light."
+            range: 20.0
         }
     ),
     ability!(
@@ -437,8 +407,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 3.0,
             range: 18.0,
             count: 3,
-            duration: 9.0,
-            desc: "Shadow pain on several enemies over time."
+            duration: 9.0
         }
     ),
     ability!(
@@ -449,8 +418,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             dot: 3.0,
             duration: 6.0,
             cooldown: 3.5,
-            range: 20.0,
-            desc: "Holy flame burns an enemy, and keeps burning."
+            range: 20.0
         }
     ),
     ability!(
@@ -459,8 +427,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Strike {
             damage: 32.0,
             cooldown: 3.5,
-            range: 22.0,
-            desc: "Blasts an enemy's mind for heavy shadow damage."
+            range: 22.0
         }
     ),
     ability!(
@@ -470,8 +437,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             damage: 11.0,
             cooldown: 3.2,
             radius: 9.0,
-            effect: Effect::Drain(0.1),
-            desc: "Holy energy bursts from you, healing you as it burns."
+            effect: Effect::Drain(0.1)
         }
     ),
     ability!(
@@ -482,8 +448,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 12.0,
             radius: 8.0,
             effect: Effect::Fear(3.5),
-            mark: 8122,
-            desc: "Terrifies nearby enemies into fleeing."
+            mark: 8122
         }
     ),
     ability!(
@@ -492,8 +457,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Shield {
             damage: 30.0,
             cooldown: 14.0,
-            duration: 10.0,
-            desc: "A shield that absorbs damage."
+            duration: 10.0
         }
     ),
     // --- Warlock ---
@@ -503,8 +467,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Bolt {
             damage: 15.0,
             cooldown: 1.4,
-            range: 24.0,
-            desc: "Sends a shadowy bolt at the nearest enemy."
+            range: 24.0
         }
     ),
     ability!(
@@ -516,8 +479,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             range: 20.0,
             count: 3,
             duration: 10.0,
-            mark: 172,
-            desc: "Corrupts several enemies with shadow over time."
+            mark: 172
         }
     ),
     ability!(
@@ -528,8 +490,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 2.5,
             range: 20.0,
             count: 4,
-            duration: 12.0,
-            desc: "Curses several enemies with lasting agony."
+            duration: 12.0
         }
     ),
     ability!(
@@ -542,8 +503,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 2.4,
             range: 20.0,
             count: 2,
-            mark: 348,
-            desc: "Sets enemies ablaze."
+            mark: 348
         }
     ),
     ability!(
@@ -554,8 +514,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 9.0,
             range: 20.0,
             radius: 7.0,
-            duration: 6.0,
-            desc: "Fire rains on the thickest pack of enemies."
+            duration: 6.0
         }
     ),
     ability!(
@@ -564,8 +523,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Aura {
             damage: 6.0,
             cooldown: 1.0,
-            radius: 7.0,
-            desc: "Constantly burns everything around you."
+            radius: 7.0
         }
     ),
     ability!(
@@ -575,8 +533,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             damage: 26.0,
             cooldown: 5.0,
             range: 22.0,
-            effect: Effect::Drain(0.5),
-            desc: "A shadow coil that heals you for half its damage."
+            effect: Effect::Drain(0.5)
         }
     ),
     ability!(
@@ -585,8 +542,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Strike {
             damage: 18.0,
             cooldown: 1.8,
-            range: 20.0,
-            desc: "Inflicts searing pain on the nearest enemy."
+            range: 20.0
         }
     ),
     ability!(
@@ -595,8 +551,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Strike {
             damage: 46.0,
             cooldown: 5.0,
-            range: 20.0,
-            desc: "Instantly blasts an enemy with shadow."
+            range: 20.0
         }
     ),
     // --- Hunter ---
@@ -606,8 +561,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Bolt {
             damage: 13.0,
             cooldown: 1.0,
-            range: 28.0,
-            desc: "An arcane arrow at the nearest enemy."
+            range: 28.0
         }
     ),
     ability!(
@@ -617,8 +571,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             damage: 10.0,
             cooldown: 2.0,
             range: 26.0,
-            count: 3,
-            desc: "Fires arrows at several enemies."
+            count: 3
         }
     ),
     ability!(
@@ -630,8 +583,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             duration: 9.0,
             cooldown: 2.6,
             range: 26.0,
-            count: 2,
-            desc: "Stings enemies with poison over time."
+            count: 2
         }
     ),
     ability!(
@@ -642,8 +594,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 9.0,
             range: 24.0,
             radius: 7.0,
-            duration: 5.0,
-            desc: "Arrows rain on the thickest pack of enemies."
+            duration: 5.0
         }
     ),
     ability!(
@@ -655,8 +606,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 8.0,
             range: 14.0,
             radius: 5.0,
-            duration: 0.0,
-            desc: "A trap explodes under a pack, burning them."
+            duration: 0.0
         }
     ),
     ability!(
@@ -667,8 +617,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 3.0,
             range: 28.0,
             effect: Effect::Slow(0.5, 4.0),
-            mark: 5116,
-            desc: "Dazes an enemy, slowing it."
+            mark: 5116
         }
     ),
     ability!(
@@ -677,8 +626,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Bolt {
             damage: 48.0,
             cooldown: 4.0,
-            range: 32.0,
-            desc: "A powerful shot at the toughest enemy in range."
+            range: 32.0
         }
     ),
     // --- Shaman ---
@@ -688,8 +636,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Bolt {
             damage: 15.0,
             cooldown: 1.3,
-            range: 24.0,
-            desc: "Hurls lightning at the nearest enemy."
+            range: 24.0
         }
     ),
     ability!(
@@ -700,8 +647,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 3.0,
             range: 20.0,
             radius: 9.0,
-            count: 3,
-            desc: "Lightning that jumps between enemies."
+            count: 3
         }
     ),
     ability!(
@@ -710,8 +656,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Strike {
             damage: 22.0,
             cooldown: 2.5,
-            range: 20.0,
-            desc: "Shocks the nearest enemy with earth."
+            range: 20.0
         }
     ),
     ability!(
@@ -723,8 +668,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             duration: 9.0,
             cooldown: 3.0,
             range: 20.0,
-            count: 2,
-            desc: "Instant fire, and a burn after."
+            count: 2
         }
     ),
     ability!(
@@ -734,8 +678,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             damage: 16.0,
             cooldown: 3.0,
             range: 20.0,
-            effect: Effect::Slow(0.5, 4.0),
-            desc: "Shocks an enemy with frost, slowing it."
+            effect: Effect::Slow(0.5, 4.0)
         }
     ),
     ability!(
@@ -746,8 +689,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 14.0,
             range: 20.0,
             duration: 14.0,
-            totem: (4589, 3606),
-            desc: "A totem that shoots fire at nearby enemies."
+            totem: (4589, 3606)
         }
     ),
     ability!(
@@ -758,8 +700,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             cooldown: 16.0,
             radius: 7.0,
             duration: 14.0,
-            totem: (4683, 8349),
-            desc: "A totem that pulses fire around itself."
+            totem: (4683, 8349)
         }
     ),
     ability!(
@@ -768,8 +709,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Orbit {
             damage: 12.0,
             cooldown: 0.9,
-            radius: 4.0,
-            desc: "Orbs of lightning zap enemies that come close."
+            radius: 4.0
         }
     ),
     // --- Paladin ---
@@ -779,8 +719,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Bolt {
             damage: 16.0,
             cooldown: 1.5,
-            range: 24.0,
-            desc: "Hurls a hammer at the nearest enemy."
+            range: 24.0
         }
     ),
     ability!(
@@ -790,8 +729,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             damage: 7.0,
             cooldown: 9.0,
             radius: 7.0,
-            duration: 8.0,
-            desc: "Consecrates the ground under you."
+            duration: 8.0
         }
     ),
     ability!(
@@ -800,8 +738,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Strike {
             damage: 24.0,
             cooldown: 2.5,
-            range: 20.0,
-            desc: "A burst of holy energy at the nearest enemy."
+            range: 20.0
         }
     ),
     ability!(
@@ -810,8 +747,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Strike {
             damage: 36.0,
             cooldown: 5.0,
-            range: 22.0,
-            desc: "Holy power drives out the toughest enemy."
+            range: 22.0
         }
     ),
     ability!(
@@ -820,8 +756,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Nova {
             damage: 14.0,
             cooldown: 5.0,
-            radius: 11.0,
-            desc: "Holy bolts strike every enemy around you."
+            radius: 11.0
         }
     ),
     ability!(
@@ -833,8 +768,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             range: 12.0,
             count: 2,
             effect: Effect::Stun(3.0),
-            mark: 853,
-            desc: "Stuns enemies with a hammer of justice."
+            mark: 853
         }
     ),
     ability!(
@@ -842,8 +776,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         642,
         Immune {
             cooldown: 28.0,
-            duration: 4.0,
-            desc: "Makes you immune to all damage."
+            duration: 4.0
         }
     ),
     ability!(
@@ -853,8 +786,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             damage: 26.0,
             cooldown: 4.0,
             range: 14.0,
-            count: 2,
-            desc: "Judges enemies with holy light."
+            count: 2
         }
     ),
     // --- Druid ---
@@ -864,8 +796,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Bolt {
             damage: 13.0,
             cooldown: 1.2,
-            range: 24.0,
-            desc: "Hurls nature's wrath at the nearest enemy."
+            range: 24.0
         }
     ),
     ability!(
@@ -877,8 +808,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             duration: 9.0,
             cooldown: 2.0,
             range: 22.0,
-            count: 2,
-            desc: "Burns enemies with moonlight."
+            count: 2
         }
     ),
     ability!(
@@ -887,8 +817,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Strike {
             damage: 40.0,
             cooldown: 4.0,
-            range: 24.0,
-            desc: "Star power on the toughest enemy in range."
+            range: 24.0
         }
     ),
     ability!(
@@ -901,8 +830,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             radius: 8.0,
             duration: 7.0,
             effect: Effect::Slow(0.6, 1.5),
-            overhead: true,
-            desc: "A storm batters the thickest pack, slowing it."
+            overhead: true
         }
     ),
     ability!(
@@ -914,8 +842,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             range: 20.0,
             count: 3,
             duration: 10.0,
-            mark: 5570,
-            desc: "Swarms several enemies with insects."
+            mark: 5570
         }
     ),
     ability!(
@@ -928,8 +855,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
             count: 4,
             duration: 5.0,
             effect: Effect::Root(4.0),
-            mark: 339,
-            desc: "Roots several enemies in place."
+            mark: 339
         }
     ),
     ability!(
@@ -938,8 +864,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Thorns {
             damage: 8.0,
             cooldown: 15.0,
-            duration: 15.0,
-            desc: "Thorns hurt enemies that strike you."
+            duration: 15.0
         }
     ),
     ability!(
@@ -948,8 +873,7 @@ pub(crate) static ABILITIES: &[AbilityDef] = &[
         Heal {
             damage: 30.0,
             cooldown: 15.0,
-            duration: 10.0,
-            desc: "Heals you over time."
+            duration: 10.0
         }
     ),
 ];
@@ -987,7 +911,6 @@ pub(crate) struct PassiveDef {
     pub spell: u32,
     pub stat: Stat,
     pub per_level: f32,
-    pub desc: &'static str,
 }
 
 pub(crate) static PASSIVES: &[PassiveDef] = &[
@@ -997,7 +920,6 @@ pub(crate) static PASSIVES: &[PassiveDef] = &[
         spell: 19740,
         stat: Stat::Might,
         per_level: 0.10,
-        desc: "+10% damage.",
     },
     PassiveDef {
         key: "fortitude",
@@ -1005,7 +927,6 @@ pub(crate) static PASSIVES: &[PassiveDef] = &[
         spell: 1243,
         stat: Stat::MaxHp,
         per_level: 0.20,
-        desc: "+20% max health.",
     },
     PassiveDef {
         key: "pack",
@@ -1013,7 +934,6 @@ pub(crate) static PASSIVES: &[PassiveDef] = &[
         spell: 13159,
         stat: Stat::Speed,
         per_level: 0.10,
-        desc: "+10% movement speed.",
     },
     PassiveDef {
         key: "renew",
@@ -1021,7 +941,6 @@ pub(crate) static PASSIVES: &[PassiveDef] = &[
         spell: 139,
         stat: Stat::Regen,
         per_level: 0.5,
-        desc: "Regenerate 0.5 health per second.",
     },
     PassiveDef {
         key: "intellect",
@@ -1029,7 +948,6 @@ pub(crate) static PASSIVES: &[PassiveDef] = &[
         spell: 1459,
         stat: Stat::Haste,
         per_level: 0.08,
-        desc: "Abilities recharge 8% faster.",
     },
     PassiveDef {
         key: "amplify",
@@ -1037,7 +955,6 @@ pub(crate) static PASSIVES: &[PassiveDef] = &[
         spell: 1008,
         stat: Stat::Area,
         per_level: 0.10,
-        desc: "+10% area of effect.",
     },
     PassiveDef {
         key: "detect",
@@ -1045,7 +962,6 @@ pub(crate) static PASSIVES: &[PassiveDef] = &[
         spell: 132,
         stat: Stat::Magnet,
         per_level: 0.40,
-        desc: "+40% pickup range.",
     },
     PassiveDef {
         key: "wisdom",
@@ -1053,7 +969,6 @@ pub(crate) static PASSIVES: &[PassiveDef] = &[
         spell: 19742,
         stat: Stat::Growth,
         per_level: 0.08,
-        desc: "+8% experience gained.",
     },
     PassiveDef {
         key: "wild",
@@ -1061,7 +976,6 @@ pub(crate) static PASSIVES: &[PassiveDef] = &[
         spell: 1126,
         stat: Stat::Armor,
         per_level: 1.0,
-        desc: "Reduces damage taken from each hit by 1.",
     },
     PassiveDef {
         key: "kings",
@@ -1069,7 +983,6 @@ pub(crate) static PASSIVES: &[PassiveDef] = &[
         spell: 20217,
         stat: Stat::Crit,
         per_level: 0.05,
-        desc: "+5% chance to critically strike for double damage.",
     },
 ];
 
@@ -1098,7 +1011,6 @@ pub(crate) static CLASSES: &[ClassDef] = &[
         ],
         weapons: &[(0, 7483, 2, 7, 1, 13, 3), (1, 1706, 4, 6, 1, 14, 4)],
         sheath: 1,
-        blurb: "Cleaves through the horde up close. Tough, and hits hard.",
     },
     ClassDef {
         id: 2,
@@ -1121,7 +1033,6 @@ pub(crate) static CLASSES: &[ClassDef] = &[
         ],
         weapons: &[(0, 8011, 2, 4, 2, 13, 3), (1, 1705, 4, 6, 1, 14, 4)],
         sheath: 1,
-        blurb: "Holy hammers and consecrated ground. Hard to kill.",
     },
     ClassDef {
         id: 3,
@@ -1145,7 +1056,6 @@ pub(crate) static CLASSES: &[ClassDef] = &[
         ],
         weapons: &[(0, 7480, 2, 6, 1, 17, 2), (2, 6235, 2, 2, 2, 15, 0)],
         sheath: 2,
-        blurb: "Arrows from afar, and traps for the packs that get close.",
     },
     ClassDef {
         id: 4,
@@ -1167,7 +1077,6 @@ pub(crate) static CLASSES: &[ClassDef] = &[
         ],
         weapons: &[(0, 7492, 2, 7, 1, 13, 3), (1, 6443, 2, 15, 1, 13, 3)],
         sheath: 1,
-        blurb: "Fast blades, bleeds and stuns.",
     },
     ClassDef {
         id: 5,
@@ -1191,7 +1100,6 @@ pub(crate) static CLASSES: &[ClassDef] = &[
         ],
         weapons: &[(0, 1926, 2, 10, 2, 17, 2)],
         sheath: 1,
-        blurb: "Holy light and shadow pain, with shields and healing.",
     },
     ClassDef {
         id: 7,
@@ -1214,7 +1122,6 @@ pub(crate) static CLASSES: &[ClassDef] = &[
         ],
         weapons: &[(0, 7477, 2, 4, 2, 13, 3), (1, 1705, 4, 6, 1, 14, 4)],
         sheath: 1,
-        blurb: "Lightning, shocks and totems that fight beside you.",
     },
     ClassDef {
         id: 8,
@@ -1242,7 +1149,6 @@ pub(crate) static CLASSES: &[ClassDef] = &[
         ],
         weapons: &[(0, 1927, 2, 10, 2, 17, 2)],
         sheath: 1,
-        blurb: "Fire, frost and arcane. Fragile, but the area damage is huge.",
     },
     ClassDef {
         id: 9,
@@ -1267,7 +1173,6 @@ pub(crate) static CLASSES: &[ClassDef] = &[
         ],
         weapons: &[(0, 5542, 2, 10, 2, 17, 2)],
         sheath: 1,
-        blurb: "Curses and fire that grind the horde down over time.",
     },
     ClassDef {
         id: 11,
@@ -1291,7 +1196,6 @@ pub(crate) static CLASSES: &[ClassDef] = &[
         ],
         weapons: &[(0, 22391, 2, 10, 2, 17, 2)],
         sheath: 1,
-        blurb: "Nature's wrath, storms and roots, and healing to stay alive.",
     },
 ];
 
@@ -1492,8 +1396,6 @@ pub(crate) struct MapDef {
     pub center: [f32; 3],
     /// How far from the centre the hero may walk.
     pub leash: f32,
-    /// The menu's line under the title.
-    pub blurb: &'static str,
     /// The results screen's line on a win.
     pub victory: &'static str,
     /// Weakest first; empty for The Barrens, which keeps its hand-tuned [`ENEMIES`].
@@ -1510,7 +1412,6 @@ pub(crate) static MAPS: &[MapDef] = &[
         // The plains south of the Crossroads.
         center: [-950.0, -2700.0, 92.0],
         leash: 150.0,
-        blurb: "Survive fifteen minutes on the plains of The Barrens",
         victory: "The Barrens are yours.",
         foes: &[],
         bosses: &[],
@@ -1522,7 +1423,6 @@ pub(crate) static MAPS: &[MapDef] = &[
         // The basin before the Portal, ringed by cliffs.
         center: [-11840.0, -3197.0, -30.0],
         leash: 75.0,
-        blurb: "Hold the Blasted Lands before the Dark Portal",
         victory: "The Dark Portal stands silent.",
         foes: &[
             foe("Starving Snickerfang", 8050, 45, 4.6, 1.0),
@@ -1555,7 +1455,6 @@ pub(crate) static MAPS: &[MapDef] = &[
         // The sands before the Scarab Wall.
         center: [-8180.0, 1536.0, 5.0],
         leash: 80.0,
-        blurb: "Stand before the Scarab Wall in Silithus",
         victory: "The Qiraji retreat behind the Scarab Wall.",
         foes: &[
             foe("Sand Skitterer", 8014, 56, 5.0, 1.0),
@@ -1594,7 +1493,6 @@ pub(crate) static MAPS: &[MapDef] = &[
         // hide the fight from above.
         center: [-7136.0, -1309.0, -184.0],
         leash: 32.0,
-        blurb: "Hold the summit of Fire Plume Ridge above Un'Goro Crater",
         victory: "Even King Mosh has fallen.",
         foes: &[
             foe("Bloodpetal Lasher", 11634, 49, 3.6, 0.9),
@@ -1634,7 +1532,6 @@ pub(crate) static MAPS: &[MapDef] = &[
         // The arena floor; the stands ring it.
         center: [-13205.0, 272.0, 22.0],
         leash: 30.0,
-        blurb: "Fight for the crowd in the Gurubashi Arena",
         victory: "The arena roars your name.",
         foes: &[
             foe("Shadowmaw Panther", 11452, 37, 5.6, 1.4),
@@ -1667,119 +1564,313 @@ pub(crate) static MAPS: &[MapDef] = &[
         ],
     },
     MapDef {
-        name: "Blackrock Mountain",
-        zone: "Burning Steppes",
+        name: "Elwynn Forest",
+        zone: "Eastern Kingdoms",
         map: 0,
-        // Blackrock Stronghold, under the burning peak.
-        center: [-7733.0, -1510.0, 133.0],
-        leash: 90.0,
-        blurb: "Break the Blackrock legions beneath the burning peak",
-        victory: "Blackrock Mountain falls silent.",
+        // Open, level ground among Elwynn Forest's own creatures: no building or big prop near.
+        center: [-9548.5, 115.0, 60.0],
+        leash: 150.0,
+        victory: "Elwynn Forest is safe once more.",
         foes: &[
-            foe("Searing Lava Spider", 4457, 47, 4.6, 1.0),
-            foe("Blackrock Worg", 741, 48, 5.4, 1.15),
-            foe("Blazing Elemental", 1070, 49, 4.2, 1.0),
-            foe("Scalding Broodling", 400, 50, 5.0, 1.3),
-            foe("Thaurissan Spy", 6649, 50, 4.4, 1.1),
-            foe("Greater Lava Spider", 7510, 51, 4.8, 1.15),
-            foe("Blackrock Soldier", 6045, 52, 4.2, 1.1),
-            foe("Flamekin Torcher", 10817, 53, 4.4, 1.0),
-            foe("Blackrock Sorcerer", 6046, 53, 3.8, 1.1),
-            foe("Giant Ember Worg", 9370, 54, 5.4, 1.5),
-            foe("Flamescale Broodling", 457, 55, 5.2, 1.4),
-            foe("Blackrock Slayer", 6047, 56, 4.6, 1.2),
-            foe("Blackrock Warlock", 6048, 56, 3.8, 1.2),
-            foe("Flamescale Dragonspawn", 2554, 57, 4.4, 1.25),
-            giant("War Reaver", 10806, 57, 3.6, 1.4),
-            foe("Blackrock Battlemaster", 6049, 58, 4.6, 1.35),
-            giant("Blackrock Drake", 6374, 58, 5.0, 0.38),
-            giant("Searscale Drake", 6377, 60, 5.0, 0.42),
+            foe("Young Wolf", 447, 1, 5.4, 1.0),
+            foe("Timber Wolf", 604, 2, 5.4, 1.0),
+            foe("Defias Thug", 5035, 4, 4.2, 1.15),
+            foe("Mangy Wolf", 903, 6, 5.4, 1.0),
+            foe("Stonetusk Boar", 503, 6, 4.6, 1.0),
+            foe("Kobold Tunneler", 139, 6, 4.2, 1.0),
+            foe("Defias Cutpurse", 2361, 6, 4.2, 1.15),
+            foe("Forest Spider", 382, 6, 4.2, 1.0),
+            foe("Murloc", 617, 7, 4.2, 1.0),
+            foe("Kobold Miner", 373, 7, 4.2, 1.0),
+            foe("Murloc Streamrunner", 527, 7, 4.2, 1.0),
+            foe("Rockhide Boar", 389, 8, 4.6, 1.0),
+            foe("Gray Forest Wolf", 380, 8, 5.4, 1.0),
+            foe("Defias Bandit", 2357, 9, 4.2, 1.15),
+            giant("Young Forest Bear", 1006, 9, 4.6, 1.0),
+            foe("Defias Rogue Wizard", 2359, 10, 3.8, 1.1),
         ],
         bosses: &[
-            foe("Highlord Omokk", 11565, 60, 4.4, 1.8),
-            giant("Volchan", 12232, 60, 3.8, 0.72),
-            foe("Overlord Wyrmthalak", 8711, 63, 4.6, 1.8),
-            foe("Emperor Dagran Thaurissan", 8807, 62, 4.6, 4.0),
-            foe("General Drakkisath", 10115, 62, 4.6, 1.45),
-            giant("Nefarian", 11380, 63, 4.8, 0.6),
+            foe("Mother Fang", 2541, 10, 4.6, 1.9),
+            foe("Narg the Taskmaster", 774, 10, 4.2, 1.9),
+            foe("Hogger", 384, 11, 4.2, 1.9),
+            foe("Thuros Lightfingers", 3341, 11, 4.2, 2.18),
+            foe("Fedfennel", 175, 12, 4.2, 1.9),
+            foe("Gruff Swiftbite", 175, 12, 4.2, 1.9),
         ],
     },
     MapDef {
-        name: "Kodo Graveyard",
-        zone: "Desolace",
+        name: "Durotar",
+        zone: "Kalimdor",
         map: 1,
-        // The bowl among the great bones.
-        center: [-1273.0, 1971.0, 51.0],
-        leash: 85.0,
-        blurb: "Endure Desolace among the bones of the ancient kodo",
-        victory: "The graveyard rests once more.",
+        // Open, level ground among Durotar's own creatures: no building or big prop near.
+        center: [587.5, -4311.4, 19.0],
+        leash: 150.0,
+        victory: "Durotar is quiet again.",
         foes: &[
-            foe("Scorpashi Snapper", 2729, 30, 4.4, 1.3),
-            foe("Gritjaw Basilisk", 1074, 31, 3.8, 0.95),
-            foe("Dread Swoop", 1192, 32, 5.2, 0.55),
-            foe("Scorpashi Lasher", 2765, 34, 4.6, 1.5),
-            foe("Rabid Bonepaw", 10271, 35, 5.4, 1.15),
-            foe("Hulking Gritjaw Basilisk", 7345, 36, 3.8, 1.25),
-            foe("Whirlwind Stormwalker", 11373, 36, 4.8, 0.95),
-            foe("Carrion Horror", 10825, 37, 5.2, 0.6),
-            foe("Burning Blade Summoner", 4709, 37, 3.8, 1.1),
-            foe("Nether Maiden", 159, 38, 4.6, 1.3),
-            foe("Ghost Walker Brave", 7374, 39, 4.0, 1.2),
-            foe("Mana Eater", 1913, 39, 5.2, 1.0),
-            foe("Dread Flyer", 10273, 40, 5.4, 0.62),
-            foe("Doomwarder", 5049, 40, 4.2, 0.95),
-            giant("Lesser Infernal", 10906, 40, 3.4, 1.0),
-            giant("Aged Kodo", 1308, 34, 3.4, 0.8),
-            giant("Dying Kodo", 1453, 40, 3.2, 0.85),
-            giant("Ancient Kodo", 2767, 42, 3.4, 0.9),
-            giant("Elder Thunder Lizard", 2764, 42, 4.4, 0.8),
+            foe("Vile Familiar", 1185, 4, 4.2, 1.0),
+            foe("Felstalker", 850, 4, 4.2, 1.0),
+            foe("Clattering Scorpid", 2486, 6, 4.6, 1.5),
+            foe("Pygmy Surf Crawler", 1307, 6, 4.6, 1.0),
+            foe("Dire Mottled Boar", 381, 7, 4.6, 1.0),
+            foe("Razormane Quilboar", 1218, 7, 4.6, 1.0),
+            foe("Armored Scorpid", 2487, 8, 4.6, 1.5),
+            foe("Bloodtalon Taillasher", 1960, 8, 5.4, 0.85),
+            foe("Razormane Scout", 1252, 8, 4.6, 1.0),
+            foe("Dustwind Harpy", 3012, 8, 4.2, 1.0),
+            foe("Dustwind Pillager", 6814, 8, 4.2, 1.0),
+            foe("Razormane Dustrunner", 6088, 9, 4.6, 1.0),
+            foe("Elder Mottled Boar", 193, 9, 4.6, 1.0),
+            foe("Razormane Battleguard", 1964, 10, 4.6, 1.0),
+            foe("Burning Blade Neophyte", 4186, 10, 3.8, 1.0),
+            foe("Burning Blade Cultist", 4194, 11, 3.8, 1.0),
         ],
         bosses: &[
-            giant("Hissperak", 2076, 37, 4.6, 2.3),
-            foe("Lord Vyletongue", 12334, 47, 5.2, 2.0),
-            foe("Noxxion", 11172, 48, 4.4, 2.25),
-            foe("Celebras the Cursed", 12350, 49, 4.4, 1.55),
-            giant("Landslide", 12293, 50, 4.0, 0.92),
-            giant("Princess Theradras", 12292, 51, 4.6, 1.95),
+            foe("Geolord Mottle", 6113, 9, 4.6, 1.9),
+            foe("Razormane Dustrunner", 6088, 9, 4.6, 1.9),
+            foe("Razormane Battleguard", 1964, 10, 4.6, 1.9),
+            foe("Burning Blade Neophyte", 4186, 10, 3.8, 1.9),
+            foe("Death Flayer", 2491, 11, 4.6, 2.85),
+            foe("Burning Blade Cultist", 4194, 11, 3.8, 1.9),
         ],
     },
     MapDef {
-        name: "Winterspring",
-        zone: "Lake Kel'Theril",
+        name: "Teldrassil",
+        zone: "Kalimdor",
         map: 1,
-        // The frozen shore of Lake Kel'Theril, clear of the snow pines to the north.
-        center: [6425.0, -4295.0, 663.0],
-        leash: 45.0,
-        blurb: "Brave the frozen shores of Lake Kel'Theril",
-        victory: "Winterspring thaws in your wake.",
+        // Open, level ground among Teldrassil's own creatures: no building or big prop near.
+        center: [9737.5, 649.8, 1298.5],
+        leash: 150.0,
+        victory: "Teldrassil blooms again.",
         foes: &[
-            foe("Winterspring Owl", 6212, 54, 5.2, 0.5),
-            foe("Shardtooth Bear", 865, 54, 4.6, 1.3),
-            foe("Fledgling Chillwind", 10807, 54, 5.4, 0.6),
-            foe("Rogue Ice Thistle", 6767, 55, 3.8, 0.85),
-            foe("Ragged Owlbeast", 12235, 55, 4.4, 0.7),
-            foe("Winterfall Runner", 6829, 56, 5.2, 1.5),
-            foe("Cobalt Whelp", 10585, 56, 5.0, 1.3),
-            foe("Suffering Highborne", 10701, 56, 3.6, 0.9),
-            foe("Spell Eater", 10583, 57, 5.0, 1.4),
-            foe("Shardtooth Mauler", 8842, 57, 4.8, 1.5),
-            foe("Hederine Initiate", 10924, 57, 4.6, 1.5),
-            foe("Cobalt Broodling", 10584, 58, 5.0, 1.55),
-            foe("Hederine Manastalker", 6172, 58, 5.4, 1.15),
-            foe("Cobalt Wyrmkin", 6761, 59, 4.2, 1.35),
-            foe("Chillwind Chimaera", 10810, 59, 5.4, 0.75),
-            foe("Rabid Shardtooth", 3200, 59, 5.0, 1.75),
-            foe("Watery Invader", 5489, 59, 4.0, 1.35),
-            foe("Hederine Slayer", 9018, 60, 4.4, 1.0),
-            giant("Frostmaul Giant", 6209, 60, 3.6, 0.62),
+            foe("Young Nightsaber", 11454, 1, 5.4, 1.5),
+            foe("Young Thistle Boar", 8869, 2, 4.6, 1.0),
+            foe("Grell", 6806, 3, 4.2, 1.0),
+            foe("Grellkin", 3023, 4, 4.2, 1.0),
+            foe("Nightsaber", 6805, 6, 5.4, 1.5),
+            foe("Strigid Owl", 10832, 6, 5.2, 1.0),
+            foe("Webwood Lurker", 760, 6, 4.2, 1.0),
+            foe("Timberling", 3033, 6, 4.2, 1.15),
+            foe("Gnarlpine Gardener", 6799, 6, 3.8, 1.0),
+            foe("Gnarlpine Warrior", 6800, 7, 4.2, 1.0),
+            foe("Gnarlpine Ambusher", 3024, 7, 4.2, 1.0),
+            foe("Vicious Grell", 6811, 7, 4.2, 1.0),
+            foe("Gnarlpine Defender", 6801, 8, 4.2, 1.0),
+            foe("Gnarlpine Shaman", 897, 8, 3.8, 1.0),
+            foe("Timberling Bark Ripper", 6817, 8, 4.2, 1.15),
+            foe("Gnarlpine Augur", 3024, 9, 3.8, 1.0),
         ],
         bosses: &[
-            giant("Rak'shiri", 10054, 57, 6.0, 3.0),
-            giant("Spellmaw", 9995, 57, 5.0, 0.45),
-            foe("General Colbatann", 9489, 61, 4.6, 1.8),
-            giant("Kashoch the Reaver", 10317, 60, 3.8, 0.82),
-            foe("Princess Tempestria", 14514, 60, 4.4, 2.6),
-            giant("Azuregos", 11460, 63, 4.8, 0.6),
+            foe("Threggil", 904, 6, 4.2, 1.9),
+            foe("Uruson", 6818, 7, 4.2, 1.9),
+            foe("Gnarlpine Defender", 6801, 8, 4.2, 1.9),
+            foe("Duskstalker", 11453, 9, 5.4, 2.85),
+            foe("Oakenscowl", 2567, 9, 4.2, 2.18),
+            foe("Gnarlpine Augur", 3024, 9, 3.8, 1.9),
+        ],
+    },
+    MapDef {
+        name: "Dun Morogh",
+        zone: "Eastern Kingdoms",
+        map: 0,
+        // Open, level ground among Dun Morogh's own creatures: no building or big prop near.
+        center: [-5400.8, -739.9, 396.7],
+        leash: 150.0,
+        victory: "Dun Morogh thaws in your wake.",
+        foes: &[
+            foe("Crag Boar", 607, 6, 4.6, 1.0),
+            giant("Young Black Bear", 8843, 6, 4.6, 1.0),
+            foe("Juvenile Snow Leopard", 748, 6, 5.4, 1.5),
+            foe("Young Wendigo", 929, 6, 4.2, 1.0),
+            foe("Wendigo", 950, 7, 4.2, 1.0),
+            foe("Large Crag Boar", 381, 7, 4.6, 1.0),
+            foe("Snow Tracker Wolf", 604, 7, 5.4, 1.0),
+            foe("Snow Leopard", 954, 8, 5.4, 1.5),
+            foe("Elder Crag Boar", 744, 8, 4.6, 1.0),
+            foe("Winter Wolf", 785, 8, 5.4, 1.0),
+            giant("Ice Claw Bear", 8840, 8, 4.6, 1.0),
+            foe("Frostmane Seer", 5610, 9, 3.8, 1.2),
+            foe("Frostmane Snowstrider", 5607, 9, 4.2, 1.2),
+        ],
+        bosses: &[
+            foe("Edan the Howler", 931, 9, 4.2, 1.9),
+            foe("Timber", 11422, 10, 5.4, 1.9),
+            foe("Great Father Arctikus", 5625, 11, 4.2, 2.28),
+            foe("Old Icebeard", 1050, 11, 4.2, 1.9),
+            foe("Vagash", 1050, 11, 4.2, 1.9),
+            giant("Bjarn", 913, 12, 4.6, 1.9),
+        ],
+    },
+    MapDef {
+        name: "Mulgore",
+        zone: "Kalimdor",
+        map: 1,
+        // Open, level ground among Mulgore's own creatures: no building or big prop near.
+        center: [-1809.9, -220.6, -8.4],
+        leash: 150.0,
+        victory: "Mulgore's herds roam free.",
+        foes: &[
+            foe("Plainstrider", 1219, 2, 5.4, 1.0),
+            foe("Battleboar", 8869, 4, 4.6, 1.0),
+            foe("Prairie Wolf", 1100, 6, 5.4, 1.0),
+            foe("Palemane Tanner", 550, 6, 4.2, 1.0),
+            foe("Venture Co. Hireling", 7243, 6, 4.2, 1.3),
+            foe("Adult Plainstrider", 1220, 7, 5.4, 1.0),
+            foe("Wiry Swoop", 1228, 7, 5.2, 0.8),
+            foe("Venture Co. Laborer", 7244, 7, 4.2, 1.3),
+            foe("Palemane Skinner", 1216, 7, 4.2, 1.0),
+            foe("Prairie Stalker", 643, 8, 5.4, 1.0),
+            foe("Flatland Cougar", 1059, 8, 5.4, 1.5),
+            foe("Palemane Poacher", 1217, 8, 4.2, 1.0),
+            foe("Venture Co. Taskmaster", 7246, 8, 4.2, 1.3),
+            foe("Swoop", 1229, 9, 5.2, 0.8),
+            foe("Elder Plainstrider", 1221, 9, 5.4, 1.0),
+        ],
+        bosses: &[
+            foe("Prairie Stalker", 643, 8, 5.4, 1.9),
+            foe("Mazzranache", 1961, 9, 5.4, 1.9),
+            foe("Snagglespear", 275, 9, 4.2, 1.9),
+            foe("Swoop", 1229, 9, 5.2, 1.52),
+            foe("Elder Plainstrider", 1221, 9, 5.4, 1.9),
+            foe("Ghost Howl", 720, 12, 5.4, 1.9),
+        ],
+    },
+    MapDef {
+        name: "Tirisfal Glades",
+        zone: "Eastern Kingdoms",
+        map: 0,
+        // Open, level ground among Tirisfal Glades's own creatures: no building or big prop near.
+        center: [1993.0, -153.3, 35.4],
+        leash: 150.0,
+        victory: "Tirisfal is at peace.",
+        foes: &[
+            foe("Decrepit Darkhound", 9021, 6, 4.2, 1.4),
+            foe("Rotting Dead", 1200, 6, 3.6, 1.0),
+            foe("Greater Duskbat", 4734, 7, 5.2, 0.8),
+            foe("Ravaged Corpse", 1201, 7, 3.6, 1.0),
+            foe("Rot Hide Graverobber", 10853, 7, 4.2, 1.0),
+            foe("Rot Hide Gnoll", 10852, 7, 4.2, 1.0),
+            foe("Rattlecage Soldier", 200, 7, 4.2, 1.2),
+            foe("Cursed Darkhound", 9020, 8, 4.2, 1.4),
+            foe("Rot Hide Mongrel", 847, 8, 4.2, 1.0),
+            foe("Hungering Dead", 1202, 8, 3.6, 1.0),
+            foe("Scarlet Missionary", 2468, 8, 3.8, 1.15),
+            foe("Darkeye Bonecaster", 11398, 8, 3.8, 1.0),
+            foe("Vampiric Duskbat", 8808, 9, 5.2, 0.8),
+            foe("Scarlet Zealot", 2483, 9, 4.2, 1.1),
+            foe("Shambling Horror", 1197, 9, 3.6, 1.0),
+        ],
+        bosses: &[
+            foe("Farmer Solliden", 3535, 8, 4.2, 2.18),
+            foe("Tormented Spirit", 9534, 9, 4.2, 1.52),
+            foe("Bayne", 7892, 10, 4.2, 2.66),
+            foe("Ressan the Needler", 9750, 11, 5.2, 1.52),
+            foe("Fellicent's Shade", 5430, 12, 4.2, 1.9),
+            foe("Gorefang", 11413, 13, 5.4, 1.9),
+        ],
+    },
+    MapDef {
+        name: "Westfall",
+        zone: "Eastern Kingdoms",
+        map: 0,
+        // Open, level ground among Westfall's own creatures: no building or big prop near.
+        center: [-10252.2, 1483.5, 41.6],
+        leash: 150.0,
+        victory: "Westfall's fields are safe.",
+        foes: &[
+            foe("Young Fleshripper", 410, 11, 5.2, 0.8),
+            foe("Coyote", 643, 11, 5.4, 1.0),
+            foe("Defias Smuggler", 4418, 12, 4.2, 1.15),
+            giant("Harvest Golem", 367, 12, 3.6, 1.0),
+            foe("Young Goretusk", 8871, 13, 4.6, 1.0),
+            foe("Defias Trapper", 2331, 13, 4.2, 1.1),
+            foe("Fleshripper", 2305, 14, 5.2, 0.8),
+            foe("Goretusk", 3027, 15, 4.6, 1.0),
+            giant("Harvest Watcher", 378, 15, 3.6, 1.0),
+            foe("Riverpaw Brute", 384, 16, 4.2, 1.0),
+            foe("Riverpaw Bandit", 383, 17, 4.2, 1.0),
+            foe("Great Goretusk", 3035, 17, 4.6, 1.0),
+            foe("Riverpaw Taskmaster", 376, 18, 4.2, 1.0),
+            foe("Defias Highwayman", 2342, 18, 4.2, 1.15),
+            foe("Pygmy Venom Web Spider", 958, 19, 4.6, 1.0),
+            foe("Riverpaw Mystic", 502, 19, 3.8, 1.0),
+        ],
+        bosses: &[
+            foe("Brainwashed Noble", 3267, 18, 4.2, 2.18),
+            foe("Marisa du'Paige", 2355, 18, 4.2, 2.09),
+            foe("Sergeant Brashclaw", 383, 18, 4.2, 1.9),
+            foe("Klaven Mortwake", 5805, 23, 4.2, 2.18),
+            foe("Lupos", 11412, 23, 5.4, 1.9),
+            foe("Vultros", 507, 26, 5.2, 1.52),
+        ],
+    },
+    MapDef {
+        name: "Duskwood",
+        zone: "Eastern Kingdoms",
+        map: 0,
+        // Open, level ground among Duskwood's own creatures: no building or big prop near.
+        center: [-10051.8, -792.5, 36.5],
+        leash: 150.0,
+        victory: "Duskwood's curse lifts.",
+        foes: &[
+            foe("Pygmy Venom Web Spider", 958, 19, 4.6, 1.0),
+            foe("Venom Web Spider", 955, 20, 4.6, 1.0),
+            foe("Skeletal Warrior", 200, 22, 4.2, 1.2),
+            foe("Green Recluse", 2541, 22, 4.6, 1.0),
+            foe("Skeletal Mage", 9783, 23, 4.2, 1.0),
+            foe("Young Black Ravager", 246, 24, 5.4, 1.0),
+            foe("Skeletal Horror", 9786, 24, 3.6, 1.0),
+            foe("Black Widow Hatchling", 368, 25, 4.6, 1.0),
+            foe("Black Ravager", 741, 25, 5.4, 1.0),
+            foe("Black Ravager Mastiff", 9562, 26, 5.4, 1.0),
+            foe("Nightbane Worgen", 657, 27, 5.4, 1.0),
+            foe("Nightbane Shadow Weaver", 203, 28, 5.4, 1.0),
+            foe("Nightbane Dark Runner", 736, 29, 5.4, 1.0),
+            foe("Nightbane Vile Fang", 522, 30, 5.4, 1.0),
+            foe("Fetid Corpse", 559, 30, 3.6, 1.3),
+            foe("Nightbane Tainted One", 1098, 31, 5.4, 1.0),
+        ],
+        bosses: &[
+            foe("Lupos", 11412, 23, 5.4, 1.9),
+            foe("Naraxis", 963, 27, 4.6, 1.9),
+            foe("Nightbane Vile Fang", 522, 30, 5.4, 1.9),
+            foe("Nightbane Tainted One", 1098, 31, 5.4, 1.9),
+            foe("Fenros", 11179, 32, 5.4, 1.9),
+            foe("Nefaru", 11181, 34, 5.4, 1.9),
+        ],
+    },
+    MapDef {
+        name: "Redridge Mountains",
+        zone: "Eastern Kingdoms",
+        map: 0,
+        // Open, level ground among Redridge Mountains's own creatures: no building or big prop near.
+        center: [-9199.8, -2767.5, 91.0],
+        leash: 150.0,
+        victory: "Redridge is safe once more.",
+        foes: &[
+            foe("Redridge Thrasher", 489, 15, 4.2, 1.0),
+            foe("Redridge Mongrel", 487, 16, 4.2, 1.0),
+            foe("Tarantula", 366, 16, 4.2, 1.0),
+            foe("Great Goretusk", 3035, 17, 4.6, 1.0),
+            foe("Redridge Poacher", 551, 17, 4.2, 1.0),
+            foe("Murloc Shorestriker", 1305, 17, 4.2, 1.0),
+            foe("Black Dragon Whelp", 387, 18, 4.2, 1.0),
+            foe("Redridge Brute", 500, 18, 4.2, 1.0),
+            foe("Redridge Mystic", 10789, 19, 3.8, 1.0),
+            foe("Dire Condor", 490, 19, 5.2, 0.8),
+            foe("Redridge Basher", 609, 20, 4.2, 1.0),
+            foe("Greater Tarantula", 520, 20, 4.2, 1.0),
+            foe("Redridge Drudger", 551, 21, 4.2, 1.0),
+            foe("Blackrock Summoner", 6030, 23, 3.8, 1.0),
+            foe("Blackrock Tracker", 6040, 24, 4.2, 1.0),
+            foe("Blackrock Champion", 6044, 25, 4.2, 1.0),
+        ],
+        bosses: &[
+            foe("Blackrock Hunter", 6031, 24, 4.2, 1.9),
+            foe("Singe", 497, 24, 4.2, 1.9),
+            foe("Tharil'zun", 6043, 24, 4.2, 1.9),
+            foe("Blackrock Gladiator", 6042, 25, 4.2, 1.9),
+            foe("Rohh the Silent", 10792, 26, 4.2, 1.9),
+            foe("Kazon", 6041, 27, 4.2, 1.9),
         ],
     },
     MapDef {
@@ -1789,7 +1880,6 @@ pub(crate) static MAPS: &[MapDef] = &[
         // A plateau below the World Tree.
         center: [5478.0, -3729.0, 1593.0],
         leash: 70.0,
-        blurb: "Defend the slopes of Mount Hyjal beneath the World Tree",
         victory: "Nordrassil endures.",
         foes: &[
             foe("Cannibal Ghoul", 10626, 56, 4.6, 1.3),
@@ -1826,7 +1916,6 @@ pub(crate) static MAPS: &[MapDef] = &[
         // Plaguewood, under the necropolis.
         center: [3010.0, -3790.0, 124.0],
         leash: 80.0,
-        blurb: "Face the Scourge in the shadow of Naxxramas",
         victory: "Kel'Thuzad's necropolis falls dark.",
         foes: &[
             foe("Scourge Soldier", 5231, 55, 4.4, 1.15),

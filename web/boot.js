@@ -152,7 +152,7 @@ async function prefetchManifest(manifestUrl, onProgress) {
 /// they click Enter World just loads the old way.
 function installProgressHook(ui, skipPrefetch) {
   window.__wenilla_progress = (stage) => {
-    if (stage === 'startup') ui.setStage('Loading interface…');
+    if (stage === 'startup') ui.setStage('Raising the world…');
     else if (stage === 'ready') {
       ui.hide();
       if (!skipPrefetch) {
@@ -194,26 +194,89 @@ function createBootUi() {
   root.id = 'wenilla-boot';
   root.innerHTML = `
     <style>
+      @font-face { font-family: 'WowMorpheus'; src: url('/data/Fonts%5CMORPHEUS.TTF'); font-display: swap; }
+      @font-face { font-family: 'WowFriz'; src: url('/data/Fonts%5CFRIZQT__.TTF'); font-display: swap; }
       #wenilla-boot { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center;
-        background: #000; color: #ccc; font: 15px system-ui, sans-serif;
-        transition: opacity .4s ease; }
+        color: #d8c9a3; font: 14px WowFriz, Georgia, serif; overflow: hidden;
+        background:
+          radial-gradient(ellipse at 50% 38%, rgba(120, 70, 20, .28), transparent 60%),
+          radial-gradient(ellipse at 50% 120%, rgba(160, 30, 10, .35), transparent 55%),
+          #070504;
+        transition: opacity .6s ease; }
       #wenilla-boot.gone { opacity: 0; pointer-events: none; }
-      #wenilla-boot .box { width: min(420px, 80vw); }
-      #wenilla-boot .stage { margin-bottom: .6rem; text-align: center; }
-      #wenilla-boot .bar { height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
-      #wenilla-boot .bar > i { display: block; height: 100%; width: 0; background: #c9a227;
-        border-radius: 3px; transition: width .15s linear; }
-      #wenilla-boot .bar.pulse > i { width: 30% !important; animation: wboot-slide 1.2s ease-in-out infinite; }
-      @keyframes wboot-slide { 0% { margin-left: 0 } 50% { margin-left: 70% } 100% { margin-left: 0 } }
-      #wenilla-boot .data { margin-top: .5rem; text-align: center; font-size: 12px; color: #888;
-        min-height: 1.2em; }
-      #wenilla-boot .err { color: #e07070; text-align: center; }
+      #wenilla-boot::before { content: ''; position: absolute; inset: -50%;
+        background: repeating-conic-gradient(from 0deg, rgba(255, 200, 90, .05) 0deg, transparent 4deg 11deg, rgba(255, 200, 90, .05) 15deg);
+        filter: blur(6px); animation: wboot-spin 120s linear infinite;
+        mask: radial-gradient(circle at 50% 50%, #000 0 18%, transparent 55%); }
+      #wenilla-boot .embers { position: absolute; inset: 0; pointer-events: none; }
+      #wenilla-boot .embers i { position: absolute; bottom: -10px; width: 3px; height: 3px; border-radius: 50%;
+        background: #ffb347; box-shadow: 0 0 8px 2px rgba(255, 140, 40, .7); opacity: 0;
+        animation: wboot-rise linear infinite; }
+      #wenilla-boot .box { position: relative; width: min(620px, 86vw); text-align: center; }
+      #wenilla-boot .bar, #wenilla-boot .stage, #wenilla-boot .data { width: min(460px, 82vw); margin-left: auto; margin-right: auto; }
+      #wenilla-boot .title { font: 88px/1.05 WowMorpheus, Georgia, serif; letter-spacing: .01em;
+        background: linear-gradient(#fff3b0 0%, #ffd25a 38%, #d98a14 62%, #7a3d06 100%);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        filter: drop-shadow(0 3px 0 #1a0b00) drop-shadow(0 0 22px rgba(255, 150, 30, .35)); }
+      #wenilla-boot .by { margin: 1rem 0 2.6rem; font-size: 13px; letter-spacing: .04em; color: #a8956b; }
+      #wenilla-boot .stage { margin-bottom: .7rem; min-height: 1.2em; color: #e9dcb8; }
+      #wenilla-boot .bar { position: relative; height: 10px; border: 1px solid #6b5426; border-radius: 6px;
+        background: linear-gradient(#120c06, #1d140a); overflow: hidden;
+        box-shadow: 0 0 0 1px #000, inset 0 1px 3px #000; }
+      #wenilla-boot .bar > i { position: relative; display: block; height: 100%; width: 0;
+        background: linear-gradient(90deg, #8a1c0a, #e0631c 55%, #ffd25a);
+        box-shadow: 0 0 12px rgba(255, 150, 40, .6); transition: width .2s linear; }
+      #wenilla-boot .bar > i::after { content: ''; position: absolute; right: -3px; top: -4px; bottom: -4px; width: 8px;
+        border-radius: 50%; background: #fff4c2; box-shadow: 0 0 10px 4px rgba(255, 200, 90, .8); }
+      #wenilla-boot .bar.pulse > i { width: 28% !important; animation: wboot-slide 1.4s ease-in-out infinite; }
+      #wenilla-boot .data { margin-top: .6rem; font-size: 12px; color: #8a7a5c; min-height: 1.2em; }
+      #wenilla-boot .tip { margin-top: 2.2rem; font-size: 14px; color: #c8b68a; min-height: 2.6em; font-style: italic;
+        transition: opacity .5s ease; }
+      #wenilla-boot .err { color: #ff7a6a; }
+      @keyframes wboot-slide { 0% { margin-left: 0 } 50% { margin-left: 72% } 100% { margin-left: 0 } }
+      @keyframes wboot-spin { to { transform: rotate(360deg) } }
+      @keyframes wboot-rise { 0% { transform: translateY(0); opacity: 0 } 10% { opacity: .9 }
+        100% { transform: translateY(-105vh) translateX(var(--dx)); opacity: 0 } }
+      @media (prefers-reduced-motion: reduce) {
+        #wenilla-boot::before, #wenilla-boot .embers i { animation: none; } }
     </style>
+    <div class="embers"></div>
     <div class="box">
+      <div class="title">Azeroth Survivors</div>
+      <div class="by">a fan-made roguelike by Aethus</div>
       <div class="stage">Loading…</div>
       <div class="bar"><i></i></div>
       <div class="data"></div>
+      <div class="tip"></div>
     </div>`;
+  const embers = root.querySelector('.embers');
+  for (let i = 0; i < 26; i++) {
+    const e = document.createElement('i');
+    e.style.left = `${Math.random() * 100}%`;
+    e.style.setProperty('--dx', `${(Math.random() - 0.5) * 120}px`);
+    e.style.animationDuration = `${7 + Math.random() * 9}s`;
+    e.style.animationDelay = `${-Math.random() * 14}s`;
+    embers.appendChild(e);
+  }
+  const tips = [
+    'Your spells cast themselves. Your only job is to not die.',
+    'Gems pull toward you once you are close. Greed gets heroes killed.',
+    'A boss arrives every couple of minutes. You will hear about it.',
+    'From level 5, F casts your class\u2019s escape. Blink, Charge, Sprint\u2026',
+    'Rare and Epic cards are worth more than they look. Legendary always is.',
+    'Press C to unlock the camera and swing it around with the mouse.',
+  ];
+  const tipEl = root.querySelector('.tip');
+  let tipN = Math.floor(Math.random() * tips.length);
+  tipEl.textContent = tips[tipN];
+  const tipTimer = setInterval(() => {
+    tipEl.style.opacity = '0';
+    setTimeout(() => {
+      tipN = (tipN + 1) % tips.length;
+      tipEl.textContent = tips[tipN];
+      tipEl.style.opacity = '1';
+    }, 500);
+  }, 5000);
   document.body.appendChild(root);
   const stageEl = root.querySelector('.stage');
   const barEl = root.querySelector('.bar');
@@ -229,8 +292,8 @@ function createBootUi() {
         const pct = Math.min(99, Math.floor((got / total) * 100));
         const done = got >= total;
         stageEl.textContent = done
-          ? 'Downloading client — done'
-          : `Downloading client — ${pct}% (${mb(got)} MB)`;
+          ? 'Summoning the horde…'
+          : `Downloading the client — ${pct}%`;
         fillEl.style.width = (done ? 100 : pct) + '%';
       } else {
         stageEl.textContent = `Downloading client — ${mb(got)} MB`;
@@ -239,7 +302,7 @@ function createBootUi() {
     },
     setData(done, total) {
       if (gone) return;
-      dataEl.textContent = total > 0 ? `game data — ${done}/${total}` : '';
+      dataEl.textContent = total > 0 && done < total ? `warming game data ${done} / ${total}` : '';
     },
     setStage(text) {
       if (gone) return;
@@ -250,6 +313,7 @@ function createBootUi() {
       clearTimeout(timeout);
       barEl.remove();
       dataEl.remove();
+      clearInterval(tipTimer);
       stageEl.className = 'err';
       stageEl.textContent = text;
     },
@@ -260,8 +324,9 @@ function createBootUi() {
       if (gone) return;
       gone = true;
       clearTimeout(timeout);
+      clearInterval(tipTimer);
       root.classList.add('gone');
-      setTimeout(() => root.remove(), 500);
+      setTimeout(() => root.remove(), 700);
     },
   };
 }

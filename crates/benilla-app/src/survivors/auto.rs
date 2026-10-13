@@ -179,7 +179,7 @@ pub(super) fn drive(
                 auto.wait = 0.0;
             } else if auto.wait > 2.0 && auto.wait < 3.0 {
                 auto.capture_once(&mut commands, "menu".into());
-            } else if auto.wait > 3.0 && hud::start_run(&mut run, &selection) {
+            } else if auto.wait > 3.0 && hud::start_run(&mut run, &mut selection) {
                 info!(
                     "survivors auto: run begins as {} at {}",
                     run.class.name,
@@ -209,10 +209,11 @@ pub(super) fn drive(
             }
         }
         Phase::LevelUp => {
-            if auto.wait > 0.3 && (run.level <= 3 || run.level == 10) {
+            // After the deal-in, so the shot shows the cards settled.
+            if auto.wait > 1.2 && (run.level <= 3 || run.level == 10) {
                 auto.capture_once(&mut commands, format!("levelup-{}", run.level));
             }
-            if auto.wait > 0.6 {
+            if auto.wait > 1.6 {
                 let n = offer.len().max(1);
                 let i = (rng.range(0.0, n as f32) as usize).min(n - 1);
                 hud::pick(i, &mut run, &mut offer, &mut rng, &mut next);
@@ -220,7 +221,7 @@ pub(super) fn drive(
             }
         }
         Phase::GameOver => {
-            if auto.wait > 1.0 {
+            if auto.wait > 1.5 {
                 auto.capture_once(&mut commands, "over".into());
             }
             if auto.wait > 6.0 {

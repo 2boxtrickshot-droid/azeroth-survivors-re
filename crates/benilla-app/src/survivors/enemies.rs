@@ -321,7 +321,9 @@ pub(super) fn move_enemies(
             continue;
         }
 
-        let held = e.stun_t > 0.0 || e.root_t > 0.0;
+        // Under Fade the horde has lost the hero: it mills where it stands.
+        let lost = run.mobile.vanish_t > 0.0 && !e.boss;
+        let held = e.stun_t > 0.0 || e.root_t > 0.0 || lost;
         let contact = dist <= HERO_RADIUS + e.radius + 0.35;
         let mut step = Vec3::ZERO;
         let mut speed = 0.0;
@@ -352,7 +354,13 @@ pub(super) fn move_enemies(
             mv.flags = 0;
         }
 
-        if contact && e.stun_t <= 0.0 && e.fear_t <= 0.0 && e.attack_cd <= 0.0 && !hero_down {
+        if contact
+            && !lost
+            && e.stun_t <= 0.0
+            && e.fear_t <= 0.0
+            && e.attack_cd <= 0.0
+            && !hero_down
+        {
             e.attack_cd = if e.boss { 1.0 } else { 1.3 };
             let raw = e.damage * e.weaken;
             let taken = hero::hurt_hero(&mut run, raw);
@@ -480,6 +488,11 @@ pub(super) fn collect_gems(
         run.xp -= data::xp_to_next(run.level);
         run.level += 1;
         run.pending_levels += 1;
+        if run.level == super::mobility::LEARN_LEVEL {
+            if let Some(m) = super::mobility::for_class(run.class.id) {
+                run.banner = Some((format!("You have learned {}! Press F.", m.name), 4.0));
+            }
+        }
     }
     if run.pending_levels > 0 {
         next.set(Phase::LevelUp);
