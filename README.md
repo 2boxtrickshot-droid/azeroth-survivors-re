@@ -1,3 +1,5 @@
+<img width="1920" height="1080" alt="brag" src="https://github.com/user-attachments/assets/fa574bb6-7bd4-4e78-8b72-14c58e3c716e" />
+
 <div align="center">
 
 # Azeroth Survivors
