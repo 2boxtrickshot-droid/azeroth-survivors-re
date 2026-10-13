@@ -56,6 +56,19 @@ client from [archive.org](https://archive.org/details/WoW_1.12.1-5875) (~5.5 GB)
 MPQs into `wow-data/Data/` (git-ignored, resumable, skipped when already present). Or point at a
 client you already have with `--data` / `WOW_DATA`.
 
+### Changing the download source
+
+If the archive.org item moves or you have your own mirror, override the URL without editing
+anything:
+
+```bash
+make build WOW_DATA_URL=https://your-mirror.example/client.zip
+```
+
+Or set it permanently by editing the single clearly-marked `DEFAULT_DATA_URL` line at the top of
+`scripts/fetch-data.sh`. Either way the URL must be a direct link to a zip holding the client's
+`Data/*.MPQ` files.
+
 ## How it's built
 
 The survivors mode is `crates/benilla-app/src/survivors/`, running on two upstream projects:

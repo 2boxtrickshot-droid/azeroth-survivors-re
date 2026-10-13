@@ -10,8 +10,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DATA_DIR="${WOW_DATA_DIR:-$ROOT/wow-data}"
 DATA="$DATA_DIR/Data"
-ZIP="$DATA_DIR/wow-1.12.1-enUS.zip"
-URL="https://archive.org/download/WoW_1.12.1-5875/1.12.1-5875_enUS.zip"
+
+# --- Data source ---------------------------------------------------------------
+# Where the game data is downloaded from. Override per-run by setting WOW_DATA_URL, or edit the
+# default below if the archive.org item ever moves. It must be a direct link to a zip that holds
+# the client's Data/*.MPQ files.
+DEFAULT_DATA_URL="https://archive.org/download/WoW_1.12.1-5875/1.12.1-5875_enUS.zip"
+URL="${WOW_DATA_URL:-$DEFAULT_DATA_URL}"
+ZIP="$DATA_DIR/$(basename "${URL%%\?*}")"
 
 # The two MPQs the game cannot boot without are the canary: both present = data is in.
 if [ -f "$DATA/terrain.MPQ" ] && [ -f "$DATA/patch.MPQ" ]; then
@@ -23,7 +29,7 @@ fi
 mkdir -p "$DATA_DIR"
 
 if [ ! -f "$ZIP" ]; then
-    echo "downloading WoW 1.12.1 (enUS) client (~5.5 GB) from archive.org…"
+    echo "downloading the game data (a WoW 1.12.1 client, ~5.5 GB)…"
     echo "  $URL"
     curl -L -C - -o "$ZIP" "$URL"
 else
