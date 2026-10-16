@@ -43,6 +43,7 @@ impl Plugin for SurvivorsPlugin {
             .init_resource::<Rng>()
             .init_resource::<Selection>()
             .init_resource::<Run>()
+            .init_resource::<Wave>()
             .init_resource::<hero::CamRig>()
             .init_resource::<hero::AimPoint>()
             .init_resource::<abilities::PendingHits>()
@@ -236,12 +237,14 @@ pub(super) const BASE_HP: f32 = 120.0;
 pub(super) const BASE_SPEED: f32 = 7.0;
 pub(super) const BASE_MAGNET: f32 = 4.5;
 
-/// One run's state.
+/// **The local player's run**: their class, level, health, build and UI state. The wave clock and
+/// the guid allocator are deliberately *not* here — they belong to the whole session and live in
+/// [`Wave`]. Splitting them is what makes a second member possible at all: two players have two
+/// of these and one of that (`docs/COOP-PLAN.md` §11.1, P2).
 #[derive(Resource)]
 pub(super) struct Run {
     pub class: &'static ClassDef,
     pub race: u8,
-    pub elapsed: f32,
     pub kills: u32,
     pub level: u32,
     pub xp: f32,
@@ -259,12 +262,9 @@ pub(super) struct Run {
     /// The class mobility's cooldown and running effect.
     mobile: mobility::MobilityState,
     pub pending_levels: u32,
-    pub bosses: u32,
-    pub rings: u32,
     pub won: bool,
     /// Seconds since the hero fell, while the death plays out.
     pub dead_t: Option<f32>,
-    pub next_guid: u64,
     pub damage_done: f64,
     /// Bumped whenever abilities or passives change, so the HUD rebuilds the icon rows once.
     pub version: u32,
@@ -272,12 +272,52 @@ pub(super) struct Run {
     pub banner: Option<(String, f32)>,
 }
 
+/// The session's shared, world-level state: the wave clock and the guid allocator. Exactly one
+/// per session, and the one resource a co-op session must *replicate* rather than simulate — a
+/// peer that advanced its own `elapsed` or rolled its own `next_guid` would diverge from the host
+/// permanently (`docs/COOP-PLAN.md` §7.2(3)).
+#[derive(Resource)]
+pub(super) struct Wave {
+    /// Seconds into the run. Drives every spawn, boss and scaling curve.
+    pub elapsed: f32,
+    pub bosses: u32,
+    pub rings: u32,
+    /// The next entity serial. Monotonic across runs on purpose: caches keyed by guid may outlive
+    /// a despawn by a frame, so this is not reset when a run starts.
+    pub next_guid: u64,
+}
+
+impl Default for Wave {
+    fn default() -> Self {
+        Self {
+            elapsed: 0.0,
+            bosses: 0,
+            rings: 0,
+            next_guid: 1,
+        }
+    }
+}
+
+impl Wave {
+    /// The next serial, for a unit, object or effect about to be spawned.
+    pub fn guid(&mut self) -> u64 {
+        self.next_guid += 1;
+        self.next_guid
+    }
+
+    /// A new run's clock: the wave restarts, the guid allocator does not.
+    pub fn reset(&mut self) {
+        self.elapsed = 0.0;
+        self.bosses = 0;
+        self.rings = 0;
+    }
+}
+
 impl Default for Run {
     fn default() -> Self {
         Self {
             class: &data::CLASSES[0],
             race: 0,
-            elapsed: 0.0,
             kills: 0,
             level: 1,
             xp: 0.0,
@@ -294,11 +334,8 @@ impl Default for Run {
             heal_t: 0.0,
             mobile: mobility::MobilityState::default(),
             pending_levels: 0,
-            bosses: 0,
-            rings: 0,
             won: false,
             dead_t: None,
-            next_guid: 1,
             damage_done: 0.0,
             version: 0,
             banner: None,
@@ -342,11 +379,6 @@ impl Run {
             }
         }
         s
-    }
-
-    pub fn guid(&mut self) -> u64 {
-        self.next_guid += 1;
-        self.next_guid
     }
 }
 
@@ -398,6 +430,7 @@ fn reset_run(
     mut commands: Commands,
     spawned: Query<Entity, With<RunEntity>>,
     mut run: ResMut<Run>,
+    mut wave: ResMut<Wave>,
     mut pending: ResMut<abilities::PendingHits>,
     mut spawner: ResMut<enemies::Spawner>,
     mut selection: ResMut<Selection>,
@@ -405,12 +438,9 @@ fn reset_run(
     for e in &spawned {
         commands.entity(e).despawn();
     }
-    // Guids stay unique across runs: caches keyed by guid may outlive a despawn by a frame.
-    let next_guid = run.next_guid;
-    *run = Run {
-        next_guid,
-        ..Run::default()
-    };
+    *run = Run::default();
+    // The wave restarts; the guid allocator does not — see [`Wave`].
+    wave.reset();
     pending.0.clear();
     *spawner = enemies::Spawner::default();
     // The preview hero is respawned for the look still picked.

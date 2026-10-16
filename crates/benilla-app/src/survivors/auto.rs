@@ -9,10 +9,10 @@ use bevy::prelude::*;
 use bevy::render::view::screenshot::{save_to_disk, Screenshot};
 
 use super::enemies::{Enemy, Gem};
-use super::hero::Hero;
+use super::hero::{Hero, LocalPlayer};
 use super::hud::{self, Offer};
 use super::units::flat;
-use super::{data, Phase, Rng, Run, Selection};
+use super::{data, Phase, Rng, Run, Selection, Wave};
 
 #[derive(Resource)]
 pub(super) struct Auto {
@@ -106,7 +106,7 @@ pub(super) fn plan(
     time: Res<Time<Real>>,
     mut auto: ResMut<Auto>,
     selection: Res<Selection>,
-    hero: Query<&Transform, With<Hero>>,
+    hero: Query<&Transform, With<LocalPlayer>>,
     gems: Query<&Transform, (With<Gem>, Without<Hero>)>,
     foes: Query<(&Transform, &Enemy), Without<Hero>>,
 ) {
@@ -154,6 +154,7 @@ pub(super) fn drive(
     mut next: ResMut<NextState<Phase>>,
     mut selection: ResMut<Selection>,
     mut run: ResMut<Run>,
+    mut wave: ResMut<Wave>,
     mut offer: ResMut<Offer>,
     mut rng: ResMut<Rng>,
     loading: Res<crate::loading_screen::LoadingScreen>,
@@ -179,7 +180,7 @@ pub(super) fn drive(
                 auto.wait = 0.0;
             } else if auto.wait > 2.0 && auto.wait < 3.0 {
                 auto.capture_once(&mut commands, "menu".into());
-            } else if auto.wait > 3.0 && hud::start_run(&mut run, &mut selection) {
+            } else if auto.wait > 3.0 && hud::start_run(&mut run, &mut wave, &mut selection) {
                 info!(
                     "survivors auto: run begins as {} at {}",
                     run.class.name,
@@ -200,9 +201,9 @@ pub(super) fn drive(
                     for o in &mut run.abilities {
                         o.level = data::MAX_ABILITY_LEVEL;
                     }
-                    run.elapsed = data::VICTORY_SECS * 2.0 / 3.0;
-                    run.bosses = 3;
-                    run.rings = 4;
+                    wave.elapsed = data::VICTORY_SECS * 2.0 / 3.0;
+                    wave.bosses = 3;
+                    wave.rings = 4;
                 }
                 next.set(Phase::Playing);
                 auto.wait = 0.0;
@@ -247,7 +248,7 @@ pub(super) fn drive(
         info!(
             "survivors auto: {:?} t={:.0}s fps={fps:.0} alive={alive} level={} hp={:.0} kills={} damage={:.0} build=[{}]",
             phase.get(),
-            run.elapsed,
+            wave.elapsed,
             run.level,
             run.hp,
             run.kills,

@@ -12,9 +12,9 @@ use bevy::ui_render::ui_material::{MaterialNode, UiMaterial};
 use bevy::window::PrimaryWindow;
 
 use super::data::{self, AbilityDef, Effect, Kind, PassiveDef, Stat};
-use super::hero::{self, Hero};
+use super::hero::{self, Hero, LocalPlayer};
 use super::minimap::{self, MiniMap};
-use super::{Owned, Phase, Rng, Run, Selection, Stats};
+use super::{Owned, Phase, Rng, Run, Selection, Stats, Wave};
 
 const GOLD: Color = Color::srgb(1.0, 0.82, 0.0);
 /// The mobility button's edge, an action button's 36 units.
@@ -862,7 +862,7 @@ pub(super) fn menu_preview(
     mut commands: Commands,
     phase: Res<State<Phase>>,
     selection: Res<Selection>,
-    mut run: ResMut<Run>,
+    mut wave: ResMut<Wave>,
     heroes: Query<Entity, With<Hero>>,
     world: benilla_world::world_point::WorldPoint,
     mut shown: Local<Option<(usize, u32, usize)>>,
@@ -888,7 +888,7 @@ pub(super) fn menu_preview(
     if let Some(h) = world.terrain_height_under(pos) {
         pos.y = h;
     }
-    let serial = run.guid();
+    let serial = wave.guid();
     hero::spawn_hero(
         &mut commands,
         &data::CLASSES[class],
@@ -900,7 +900,7 @@ pub(super) fn menu_preview(
     );
 }
 
-pub(super) fn start_run(run: &mut Run, selection: &mut Selection) -> bool {
+pub(super) fn start_run(run: &mut Run, wave: &mut Wave, selection: &mut Selection) -> bool {
     let (Some(class), Some(&(_, race, _))) = (
         selection.class_def(),
         selection.look.and_then(|i| selection.looks.get(i)),
@@ -909,13 +909,13 @@ pub(super) fn start_run(run: &mut Run, selection: &mut Selection) -> bool {
     };
     // The world goes to the battleground picked; until now it stood in the last one.
     selection.stage = selection.map;
-    let next_guid = run.next_guid;
     *run = Run {
         class,
         race,
-        next_guid,
         ..Run::default()
     };
+    // A new run's clock. The guid allocator is deliberately untouched — see [`Wave`].
+    wave.reset();
     run.abilities.push(Owned {
         def: data::ability(class.start),
         level: 1,
@@ -1057,11 +1057,12 @@ pub(super) fn keys(
     phase: Res<State<Phase>>,
     mut selection: ResMut<Selection>,
     mut run: ResMut<Run>,
+    mut wave: ResMut<Wave>,
     mut next: ResMut<NextState<Phase>>,
 ) {
     match phase.get() {
         Phase::Menu => {
-            if keys.just_pressed(KeyCode::Enter) && start_run(&mut run, &mut selection) {
+            if keys.just_pressed(KeyCode::Enter) && start_run(&mut run, &mut wave, &mut selection) {
                 next.set(Phase::Playing);
             }
         }
@@ -1220,6 +1221,7 @@ pub(super) fn refresh_hud(
     time: Res<Time>,
     phase: Res<State<Phase>>,
     mut run: ResMut<Run>,
+    wave: Res<Wave>,
     selection: Res<Selection>,
     font: Res<HudFont>,
     mut texts: ParamSet<(
@@ -1249,7 +1251,7 @@ pub(super) fn refresh_hud(
     if let Ok(mut t) = texts.p0().single_mut() {
         **t = format!("Level {}", run.level);
     }
-    let secs = run.elapsed as u32;
+    let secs = wave.elapsed as u32;
     if let Ok(mut t) = texts.p1().single_mut() {
         **t = format!("{:02}:{:02}", secs / 60, secs % 60);
     }
@@ -1515,7 +1517,7 @@ const PLATE_NUDGE: f32 = 2.0;
 pub(super) fn hero_plate(
     run: Res<Run>,
     ui_scale: Res<UiScale>,
-    hero: Query<&Transform, With<Hero>>,
+    hero: Query<&Transform, With<LocalPlayer>>,
     cams: Query<(&Camera, &Transform), With<WorldCamera>>,
     mut nodes: ParamSet<(
         Query<(&mut Node, &mut Visibility), With<HpFrame>>,
@@ -1651,13 +1653,14 @@ impl TipLine {
 #[allow(clippy::type_complexity)]
 pub(super) fn refresh_results(
     run: Res<Run>,
+    wave: Res<Wave>,
     selection: Res<Selection>,
     mut over_texts: ParamSet<(
         Query<(&OverStat, &mut Text)>,
         Query<&mut Text, With<OverLine>>,
     )>,
 ) {
-    let secs = run.elapsed as u32;
+    let secs = wave.elapsed as u32;
     let stats_line = if run.won {
         selection.map_def().victory
     } else {
@@ -1668,7 +1671,7 @@ pub(super) fn refresh_results(
         run.level.to_string(),
         run.kills.to_string(),
         compact(run.damage_done),
-        run.bosses.to_string(),
+        wave.bosses.to_string(),
     ];
     for (stat, mut t) in &mut over_texts.p0() {
         if let Some(v) = values.get(stat.0) {

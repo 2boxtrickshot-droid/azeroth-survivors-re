@@ -584,47 +584,75 @@ whole system. The shape that fits this codebase:
 
 ### 11.5 What is in the tree now, and what is next
 
-Landed with this document:
+**P1 (connection layer) and P2 (the party refactor) are both landed.**
 
-- `crates/benilla-app/src/survivors/data.rs` — `Role { Tank, Healer, Dps }` with `label()`, a
-  `role` field on `ClassDef`, and a role for all nine classes: Warrior/Paladin Tank,
-  Priest/Druid Healer, Hunter/Rogue/Shaman/Mage/Warlock DPS. Solo play is unaffected; the
-  field is data only.
-- `crates/benilla-app/src/survivors/menu.rs` — the pick screen names the role, e.g.
-  "Human Warrior — Tank". This is also what keeps the new enum used, so
-  `cargo clippy --workspace --all-targets -- -D warnings` (`.github/workflows/ci.yml`) stays
-  green.
-- `web/net.js` — the connection layer: the join-code codec, the `LocalSignal` seam, the
-  `Net` session (host/join/deliver, a reliable `ev` channel and an unreliable `snap` channel,
-  `inbox`/`send`/`sendFast` for the wasm), `iceConfig` with STUN-by-default and a TURN field,
-  and the guarded `window.__wenilla_net` handle.
+P1:
+
+- `web/net.js` — the join-code codec, the `LocalSignal` seam, the `Net` session (host/join/
+  deliver, a reliable `ev` channel and an unreliable `snap` channel, `inbox`/`send`/`sendFast`
+  for the wasm), `iceConfig` with STUN-by-default and a TURN field, and the guarded
+  `window.__wenilla_net` handle.
 - `web/tests/net.test.mjs` — 8 tests over the parts that are pure logic and decide whether a
   session can work at all: the codec round-trip, stale/wrong/garbage codes, the encoder
   refusing to emit what it could not read, the one-tank/one-healer party rule, ICE defaults,
   and the signal→session path. Run with `node --test web/tests/*.test.mjs`.
 - `scripts/web-build.sh` — `web/net.js` added to the `cp` line. **This is load-bearing:** a
   page file that is not on that line never reaches `web/dist`, so never reaches the browser.
-- `docs/COOP-PLAN.md` — this document.
+
+P2, the party refactor, in two halves:
+
+1. **The local member is now a distinct thing from a party member.** `hero::LocalPlayer` marks
+   this client's own member (added by `spawn_hero`), and the twelve systems that mean *me* —
+   `aim_cursor`, `drive_hero`, `place_camera`, `hero_vitals`, `cast_abilities`,
+   `cast_mobility`, `collect_gems`, `spawn_enemies`, `move_enemies`, `hero_plate`,
+   `minimap::compose`, `auto::plan` — now filter on it instead of `With<Hero>`. `With<Hero>`
+   keeps its meaning as *any* member, which is what the party-wide queries
+   (`menu_preview`, `auto::plan`'s hero count) and the `Without<Hero>` disjointness pairs
+   still want. Two of those pairs (`move_enemies`, `cast_mobility`) carry `With<Hero>`
+   alongside `With<LocalPlayer>` so Bevy can still prove the two `Transform` accesses
+   disjoint.
+2. **The shared world state is now a separate resource.** `survivors::Wave` holds `elapsed`,
+   `bosses`, `rings` and `next_guid` plus `Wave::guid()`; `Run` is documented as *the local
+   player's* run and keeps everything else. `Wave::reset()` restarts the clock without
+   touching the guid allocator, which is what the old "guids stay unique across runs" comment
+   in `reset_run` was protecting by hand. This is the resource a co-op session must replicate
+   rather than simulate (§7.2(3)).
+
+**Verification status, stated plainly.** The wasm CI gate
+(`cargo check --target wasm32-unknown-unknown -p wenilla --no-default-features --features webgpu`)
+exits 0 with exactly the four pre-existing warnings and none in a touched file; `cargo fmt
+--check` reports nothing in `survivors/`; the 8 `web/net.js` tests pass. **What is *not* yet
+verified is behaviour**: this sandbox has no 1.12.1 game data, so the run itself never
+executed. P2's claim of "single-player unchanged" is an argument from the code — there is
+exactly one `LocalPlayer` at any time (the menu preview is the run's hero; `reset_run` despawns
+it and `menu_preview` respawns it), and `Wave`'s defaults and reset points are the same ones
+`Run` used to carry — not a measurement. Before P3, run the comparison the plan calls for:
+
+```bash
+# native, with a client installed — the autopilot plays a whole run and logs it every 10 s
+WOW_SURVIVORS_AUTO=Mage WOW_SURVIVORS_MAP=0 WOW_DATA=/path/to/WoW/Data \
+  cargo run --release -p warcraft-survivors
+```
+
+The `survivors auto:` log lines (phase, t, fps, alive, level, hp, kills, damage, build) are the
+before/after baseline; run the same line on the commit before P2 and compare.
 
 Next, in the §11.1 order:
 
-1. **P2, the party refactor.** The `Role` data is in place; now `Run` splits and `Hero` becomes
-   `PartyMember`. This is the largest and least visible step, and it should land as its own
-   change with single-player behaviour compared before and after (the `WOW_SURVIVORS_AUTO`
-   autopilot makes that mechanical).
-2. **P3.** `survivors/coop.rs` reads `window.__wenilla_net` once a frame (the `webbridge`
+1. **P3.** `survivors/coop.rs` reads `window.__wenilla_net` once a frame (the `webbridge`
    idiom), sends the local input packet, and applies peer transforms to `PartyMember`
    entities spawned through the existing `units::spawn_unit` path. Plus the lobby UI: Host /
-   Join, a textarea for the code, and the party's roles.
-3. **P4.** Gate `spawn_enemies` / `move_enemies` / `apply_hits` on `is_host` and replicate.
+   Join, a textarea for the code, and the party's roles. This is where `PartyMember` and
+   `OwnerId` finally get introduced — deliberately deferred from P2 so that step stayed a
+   pure refactor with no dead code for CI's `-D warnings` clippy to trip over.
+2. **P4.** Gate `spawn_enemies` / `move_enemies` / `apply_hits` on `is_host` and replicate.
 
 Two things to do first, both cheap and both prerequisites for trusting any of it:
 
-- **Establish the build baseline.** The wasm check
-  (`cargo check --target wasm32-unknown-unknown -p wenilla --no-default-features --features webgpu`)
-  is the CI gate and is runnable without game data; the native
-  `cargo check --workspace --all-targets` needs `libasound2-dev`/`libudev-dev` and was **not**
-  possible in the sandbox this was written in. Run both before P2.
+- **Establish the native build baseline.** `cargo check --workspace --all-targets` needs
+  `libasound2-dev`/`libudev-dev` and was **not** possible in the sandbox this was written in
+  (no sudo, no ALSA headers). It is the config CI's `clippy --workspace --all-targets -D
+  warnings` runs, so it is the one that can still surprise us.
 - **Note the pre-existing web test failure.** `node --test web/tests/boot.test.mjs` fails 6/6
   in this sandbox on a pristine checkout (`git stash` → same result), so it is not caused by
   anything here. It is worth a look on a normal machine, since `.github/workflows/check.yml`

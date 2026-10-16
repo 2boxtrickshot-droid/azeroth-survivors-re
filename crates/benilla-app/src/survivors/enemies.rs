@@ -9,9 +9,9 @@ use bevy::prelude::*;
 
 use super::abilities::Hit;
 use super::data::{self, EnemyDef};
-use super::hero::{self, Hero, HERO_RADIUS};
+use super::hero::{self, Hero, LocalPlayer, HERO_RADIUS};
 use super::units::{self, flat, yaw_toward, Fx, Marks, UnitSpec, COLOR_HURT};
-use super::{Phase, Rng, Run, Selection};
+use super::{Phase, Rng, Run, Selection, Wave};
 use crate::creature_anim::{move_flags, MovementState};
 use crate::net::{FieldChanged, Guid, ObjectStore};
 
@@ -95,14 +95,14 @@ fn radius_for(def: &EnemyDef) -> f32 {
 
 fn spawn_enemy(
     commands: &mut Commands,
-    run: &mut Run,
+    wave: &mut Wave,
     def: &'static EnemyDef,
     pos: Vec3,
     hero: Vec3,
     boss: bool,
 ) {
-    let scale = data::hp_scale(run.elapsed);
-    let serial = run.guid();
+    let scale = data::hp_scale(wave.elapsed);
+    let serial = wave.guid();
     let e = units::spawn_unit(
         commands,
         &UnitSpec {
@@ -125,7 +125,7 @@ fn spawn_enemy(
             hp,
             max_hp: hp,
             speed: def.speed,
-            damage: def.damage * data::damage_scale(run.elapsed),
+            damage: def.damage * data::damage_scale(wave.elapsed),
             radius: radius_for(def),
             xp: def.xp,
             boss,
@@ -155,10 +155,11 @@ pub(super) fn spawn_enemies(
     mut commands: Commands,
     time: Res<Time>,
     mut run: ResMut<Run>,
+    mut wave: ResMut<Wave>,
     mut rng: ResMut<Rng>,
     mut spawner: ResMut<Spawner>,
     selection: Res<Selection>,
-    hero: Query<&Transform, With<Hero>>,
+    hero: Query<&Transform, With<LocalPlayer>>,
     enemies: Query<&Enemy>,
     world: WorldPoint,
 ) {
@@ -167,28 +168,28 @@ pub(super) fn spawn_enemies(
         return;
     }
     let hpos = h.translation;
-    let elapsed = run.elapsed;
+    let elapsed = wave.elapsed;
     let roster = data::roster(selection.map);
     let pool = data::wave_pool(elapsed, roster.enemies.len());
 
     let due_bosses = ((elapsed / data::BOSS_EVERY_SECS) as u32).min(roster.bosses.len() as u32);
-    while run.bosses < due_bosses {
-        let def = &roster.bosses[run.bosses as usize];
+    while wave.bosses < due_bosses {
+        let def = &roster.bosses[wave.bosses as usize];
         let a = rng.range(0.0, std::f32::consts::TAU);
         let pos = ground(
             &world,
             hpos + Vec3::new(a.cos(), 0.0, a.sin()) * 30.0,
             hpos.y,
         );
-        spawn_enemy(&mut commands, &mut run, def, pos, hpos, true);
-        run.bosses += 1;
+        spawn_enemy(&mut commands, &mut wave, def, pos, hpos, true);
+        wave.bosses += 1;
         run.banner = Some((format!("{} approaches!", def.name), 4.0));
     }
 
     // Half way between bosses, a closing ring of the moment's weakest.
     let due_rings = ((elapsed + data::BOSS_EVERY_SECS / 2.0) / data::BOSS_EVERY_SECS) as u32;
-    if run.rings < due_rings {
-        run.rings = due_rings;
+    if wave.rings < due_rings {
+        wave.rings = due_rings;
         let def = &roster.enemies[pool[0]];
         let n = 28 + (data::progress(elapsed) * 60.0) as usize;
         for i in 0..n {
@@ -198,7 +199,7 @@ pub(super) fn spawn_enemies(
                 hpos + Vec3::new(a.cos(), 0.0, a.sin()) * 26.0,
                 hpos.y,
             );
-            spawn_enemy(&mut commands, &mut run, def, pos, hpos, false);
+            spawn_enemy(&mut commands, &mut wave, def, pos, hpos, false);
         }
         run.banner = Some(("They're surrounding you!".into(), 3.0));
     }
@@ -219,7 +220,7 @@ pub(super) fn spawn_enemies(
         let a = rng.range(0.0, std::f32::consts::TAU);
         let r = rng.range(34.0, 42.0);
         let pos = ground(&world, hpos + Vec3::new(a.cos(), 0.0, a.sin()) * r, hpos.y);
-        spawn_enemy(&mut commands, &mut run, def, pos, hpos, false);
+        spawn_enemy(&mut commands, &mut wave, def, pos, hpos, false);
     }
 }
 
@@ -230,7 +231,10 @@ pub(super) fn move_enemies(
     time: Res<Time>,
     mut run: ResMut<Run>,
     world: WorldPoint,
-    hero: Query<(Entity, &Transform), (With<Hero>, Without<Enemy>)>,
+    // The chase target. Still the local member for now; P6 turns this into a threat-table
+    // lookup (`docs/COOP-PLAN.md` §11.4). `With<Hero>` stays on this side of the pair so Bevy
+    // can prove the two `Transform` accesses disjoint — the other side is `Without<Hero>`.
+    hero: Query<(Entity, &Transform), (With<LocalPlayer>, With<Hero>, Without<Enemy>)>,
     mut enemies: Query<(Entity, &mut Transform, &mut Enemy, &mut MovementState), Without<Hero>>,
     mut fx: Fx,
     mut hits: MessageWriter<Hit>,
@@ -416,14 +420,14 @@ pub(super) fn drop_loot(
     mut commands: Commands,
     mut drops: MessageReader<Loot>,
     mut rng: ResMut<Rng>,
-    mut run: ResMut<Run>,
+    mut wave: ResMut<Wave>,
     mut gems: Query<&mut Gem>,
 ) {
     let mut count = gems.iter().count();
     for d in drops.read() {
         if d.boss || rng.f32() < 0.015 {
             let heal = GemKind::Heal(if d.boss { 1000.0 } else { 30.0 });
-            spawn_gem(&mut commands, run.guid(), d.pos + Vec3::X * 0.8, heal);
+            spawn_gem(&mut commands, wave.guid(), d.pos + Vec3::X * 0.8, heal);
         }
         if count >= MAX_GEMS && !d.boss {
             if let Some(mut g) = gems.iter_mut().find(|g| matches!(g.kind, GemKind::Xp(_))) {
@@ -433,7 +437,7 @@ pub(super) fn drop_loot(
                 continue;
             }
         }
-        spawn_gem(&mut commands, run.guid(), d.pos, GemKind::Xp(d.xp));
+        spawn_gem(&mut commands, wave.guid(), d.pos, GemKind::Xp(d.xp));
         count += 1;
     }
 }
@@ -454,7 +458,7 @@ pub(super) fn collect_gems(
     time: Res<Time>,
     mut run: ResMut<Run>,
     mut next: ResMut<NextState<Phase>>,
-    hero: Query<&Transform, (With<Hero>, Without<Gem>)>,
+    hero: Query<&Transform, (With<LocalPlayer>, Without<Gem>)>,
     mut gems: Query<(Entity, &mut Transform, &mut Gem)>,
 ) {
     let Ok(h) = hero.single() else { return };

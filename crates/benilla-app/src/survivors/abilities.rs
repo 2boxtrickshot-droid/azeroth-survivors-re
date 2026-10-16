@@ -5,9 +5,9 @@ use bevy::prelude::*;
 
 use super::data::{AbilityDef, Effect, Kind};
 use super::enemies::{self, Enemy, Loot};
-use super::hero::{self, Hero};
+use super::hero::{self, LocalPlayer};
 use super::units::{self, flat, Fx, Marks, UnitSpec, COLOR_HEAL, COLOR_MELEE, COLOR_SPELL};
-use super::{Rng, Run, RunEntity};
+use super::{Rng, Run, RunEntity, Wave};
 use crate::net::{FieldChanged, Guid, ObjectStore};
 
 /// One blow landing on one enemy.
@@ -197,9 +197,10 @@ pub(super) fn cast_abilities(
     mut commands: Commands,
     time: Res<Time>,
     mut run: ResMut<Run>,
+    mut wave: ResMut<Wave>,
     mut rng: ResMut<Rng>,
     spells: Option<Res<crate::ui_action::Spells>>,
-    hero: Query<(Entity, &Transform), With<Hero>>,
+    hero: Query<(Entity, &Transform), With<LocalPlayer>>,
     enemies: Query<(Entity, &Transform, &Enemy)>,
     mut fx: Fx,
     mut pending: ResMut<PendingHits>,
@@ -212,7 +213,7 @@ pub(super) fn cast_abilities(
     let Ok((me, htf)) = hero.single() else { return };
     let hpos = htf.translation;
     let stats = run.stats();
-    let now = run.elapsed;
+    let now = wave.elapsed;
     let mut foes: Vec<Foe> = enemies
         .iter()
         .filter(|(_, _, e)| !e.dead)
@@ -335,7 +336,7 @@ pub(super) fn cast_abilities(
                                 .spawn((Transform::from_translation(center), RunEntity))
                                 .id()
                         } else {
-                            let serial = run.guid();
+                            let serial = wave.guid();
                             units::spawn_area_object(
                                 &mut commands,
                                 serial,
@@ -497,7 +498,7 @@ pub(super) fn cast_abilities(
                     fx.cast(me, def.spell, &[], None);
                     let a = rng.range(0.0, std::f32::consts::TAU);
                     let pos = hpos + Vec3::new(a.cos(), 0.0, a.sin()) * 2.0;
-                    let serial = run.guid();
+                    let serial = wave.guid();
                     let totem = units::spawn_unit(
                         &mut commands,
                         &UnitSpec {
@@ -538,6 +539,7 @@ pub(super) fn tick_areas(
     mut commands: Commands,
     time: Res<Time>,
     run: Res<Run>,
+    wave: Res<Wave>,
     mut rng: ResMut<Rng>,
     spells: Option<Res<crate::ui_action::Spells>>,
     mut areas: Query<(Entity, &Transform, &mut GroundArea)>,
@@ -552,7 +554,7 @@ pub(super) fn tick_areas(
         return;
     }
     let stats = run.stats();
-    let now = run.elapsed;
+    let now = wave.elapsed;
     let live: Vec<Foe> = enemies
         .iter()
         .filter(|(_, _, e)| !e.dead)
@@ -660,6 +662,7 @@ pub(super) fn apply_hits(
     mut commands: Commands,
     time: Res<Time>,
     mut run: ResMut<Run>,
+    wave: Res<Wave>,
     mut pending: ResMut<PendingHits>,
     mut incoming: MessageReader<Hit>,
     mut enemies: Query<(
@@ -675,7 +678,7 @@ pub(super) fn apply_hits(
     mut fields: MessageWriter<FieldChanged>,
 ) {
     let dt = time.delta_secs();
-    let now = run.elapsed;
+    let now = wave.elapsed;
     let mut due: Vec<Hit> = incoming.read().cloned().collect();
     pending.0.retain(|(t, h)| {
         if *t <= now {

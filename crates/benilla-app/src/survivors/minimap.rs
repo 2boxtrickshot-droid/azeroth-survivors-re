@@ -20,7 +20,7 @@ use benilla_world::world_map::CurrentMap;
 use benilla_world::world_point::WorldPoint;
 
 use super::enemies::Enemy;
-use super::hero::Hero;
+use super::hero::LocalPlayer;
 use super::hud::UiArt;
 use super::Run;
 use crate::area::AreaTableRes;
@@ -360,7 +360,7 @@ pub(super) fn compose(
     catalog: Option<Res<MapCatalogRes>>,
     current: Option<Res<CurrentMap>>,
     phase: Res<State<super::Phase>>,
-    hero: Query<&Transform, With<Hero>>,
+    hero: Query<&Transform, With<LocalPlayer>>,
     enemies: Query<(&Transform, &Enemy)>,
     mut images: ResMut<Assets<Image>>,
 ) {

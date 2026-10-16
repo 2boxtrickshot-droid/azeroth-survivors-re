@@ -4,7 +4,7 @@
 use bevy::prelude::*;
 
 use super::enemies::Enemy;
-use super::hero::{self, Hero};
+use super::hero::{self, Hero, LocalPlayer};
 use super::units::{flat, Fx};
 use super::{Phase, Run};
 use benilla_world::world_point::WorldPoint;
@@ -170,14 +170,17 @@ impl Run {
 }
 
 /// `F`: cast the mobility if it is learned and ready; ticks the cooldown and the running effect.
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub(super) fn cast_mobility(
     time: Res<Time>,
     keys: Res<ButtonInput<KeyCode>>,
     phase: Res<State<Phase>>,
     mut run: ResMut<Run>,
     world: WorldPoint,
-    mut hero: Query<(Entity, &mut Transform), With<Hero>>,
+    // `With<Hero>` rides along so Bevy can prove this disjoint from the `Without<Hero>` enemies
+    // below — both sides touch `Transform`. The local member is the only caster for now; P4
+    // moves casting to whichever peer owns the member.
+    mut hero: Query<(Entity, &mut Transform), (With<LocalPlayer>, With<Hero>)>,
     mut enemies: Query<(Entity, &Transform, &mut Enemy), Without<Hero>>,
     selection: Res<super::Selection>,
     aim: Res<hero::AimPoint>,

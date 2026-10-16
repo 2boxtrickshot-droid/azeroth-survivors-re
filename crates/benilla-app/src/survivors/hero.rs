@@ -7,7 +7,7 @@ use bevy::prelude::*;
 
 use super::data::{self, ClassDef};
 use super::units::{self, flat, wow_to_bevy, yaw_toward, Fx, Marks, UnitSpec};
-use super::{Phase, Run, Selection};
+use super::{Phase, Run, Selection, Wave};
 use crate::creature_anim::{move_flags, MovementState};
 use crate::net::{FieldChanged, Guid, ObjectStore};
 
@@ -20,6 +20,16 @@ pub(super) struct Hero {
     /// the top of the frame, so the arc is re-applied over the ground each frame.
     pub(super) air: f32,
 }
+
+/// This client's own member — exactly one exists per client, in single-player and in co-op
+/// alike. Systems that mean *me* (the camera, the cursor aim, the local health and level-up UI,
+/// the local auto-cast) filter on this; systems that mean *the party* iterate `With<Hero>`.
+///
+/// The distinction is load-bearing rather than cosmetic: every one of those systems used to say
+/// `With<Hero>` and take `.single()`, which silently picks an arbitrary member the moment a
+/// second one exists. See `docs/COOP-PLAN.md` §11.1 (P2).
+#[derive(Component)]
+pub(super) struct LocalPlayer;
 
 /// The body radius enemies stop at.
 pub(super) const HERO_RADIUS: f32 = 0.7;
@@ -124,7 +134,7 @@ pub(super) fn spawn_hero(
     );
     commands
         .entity(e)
-        .insert((Hero { vy: 0.0, air: 0.0 }, Marks::buffs()));
+        .insert((Hero { vy: 0.0, air: 0.0 }, Marks::buffs(), LocalPlayer));
     e
 }
 
@@ -149,7 +159,7 @@ pub(super) struct AimPoint(pub(super) Option<Vec3>);
 pub(super) fn aim_cursor(
     windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
     cams: Query<(&Camera, &Transform), With<WorldCamera>>,
-    hero: Query<&Transform, (With<Hero>, Without<WorldCamera>)>,
+    hero: Query<&Transform, (With<LocalPlayer>, Without<WorldCamera>)>,
     world: WorldPoint,
     mut aim: ResMut<AimPoint>,
 ) {
@@ -196,7 +206,7 @@ pub(super) fn drive_hero(
     world: WorldPoint,
     auto: Option<Res<super::auto::Auto>>,
     mut player: ResMut<crate::player::Player>,
-    mut hero: Query<(&mut Transform, &mut MovementState, &mut Hero)>,
+    mut hero: Query<(&mut Transform, &mut MovementState, &mut Hero), With<LocalPlayer>>,
 ) {
     let focus = match hero.single_mut() {
         Ok((mut tf, mut mv, mut hm)) => {
@@ -325,7 +335,7 @@ pub(super) fn place_camera(
     keys: Res<ButtonInput<KeyCode>>,
     player: Res<crate::player::Player>,
     world: WorldPoint,
-    hero: Query<&Transform, (With<Hero>, Without<WorldCamera>)>,
+    hero: Query<&Transform, (With<LocalPlayer>, Without<WorldCamera>)>,
     mut cams: Query<&mut Transform, With<WorldCamera>>,
 ) {
     // `C` unlocks the camera to swing and tilt; locking it again snaps back to the top-down view,
@@ -401,8 +411,9 @@ pub(super) fn hurt_hero(run: &mut Run, raw: f32) -> f32 {
 pub(super) fn hero_vitals(
     time: Res<Time>,
     mut run: ResMut<Run>,
+    mut wave: ResMut<Wave>,
     mut next: ResMut<NextState<Phase>>,
-    mut hero: Query<(Entity, &Guid, &mut ObjectStore, &mut Marks), With<Hero>>,
+    mut hero: Query<(Entity, &Guid, &mut ObjectStore, &mut Marks), With<LocalPlayer>>,
     mut fields: MessageWriter<FieldChanged>,
     mut fx: Fx,
 ) {
@@ -418,7 +429,7 @@ pub(super) fn hero_vitals(
         }
         return;
     }
-    run.elapsed += dt;
+    wave.elapsed += dt;
     let r = &mut *run;
     for t in [&mut r.shield_t, &mut r.immune_t, &mut r.thorns_t] {
         *t = (*t - dt).max(0.0);
@@ -461,7 +472,7 @@ pub(super) fn hero_vitals(
         units::kill_unit(&mut store);
         marks.clear();
         marks.flush(entity, guid.0, &mut store, &mut fields);
-    } else if run.elapsed >= data::VICTORY_SECS {
+    } else if wave.elapsed >= data::VICTORY_SECS {
         run.won = true;
         // A last flourish before the results.
         fx.cast(entity, 642, &[entity], None);
