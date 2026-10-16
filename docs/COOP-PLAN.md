@@ -637,15 +637,50 @@ WOW_SURVIVORS_AUTO=Mage WOW_SURVIVORS_MAP=0 WOW_DATA=/path/to/WoW/Data \
 The `survivors auto:` log lines (phase, t, fps, alive, level, hp, kills, damage, build) are the
 before/after baseline; run the same line on the commit before P2 and compare.
 
+P3, two players moving and visible to each other — deliberately the smallest thing that works:
+
+- **Each peer simulates only its own member and replicates its transform.** There is no authority
+  yet, so both peers still run their own enemy simulation: they see the same *players* and
+  different *hordes*. That is the honest stopping point of P3.
+- **`survivors/coop.rs`** owns the game side: `OwnerId` (host 0, guest 1 — enough for two,
+  deliberately not enough for five; P5 assigns the rest), `PartyMember` for a peer's body, the
+  `Coop` resource, and three systems — `sync_mode` (one `Reflect::get` a frame), `receive` (drain
+  the inbox, follow the host's battleground, move peer bodies) and `send_self` (our own state at
+  20 Hz on the unreliable channel). A peer's body goes through the existing `units::spawn_unit`
+  path with `Hero` as well as `PartyMember`, so it is a member to the enemies, the gems and the
+  minimap with no new filtering. The JS boundary is a wasm arm plus a native no-op arm with
+  identical signatures (`webbridge/sink.rs`'s pattern), so `cargo check --workspace` stays honest
+  on x86.
+- **The page owns the wire and the lobby** — `web/net.js` (already written in P1) and
+  `web/lobby.js`, the Host/Join panel. A join code is kilobytes of text and the clipboard, which
+  is DOM work; keeping it on the page is also what makes a real invite page a drop-in replacement
+  for `lobby.js` rather than a change to the game. The wasm reads exactly three things off
+  `window.__wenilla_net`: `role`, `inbox`, `sendFast`.
+
+**The two-tab procedure** (the thing this step exists to prove, and the thing nothing in this
+sandbox could run — no browser, no WebGPU adapter, no game data):
+
+```bash
+scripts/web-build.sh
+cargo run --release -p wenilla-host -- --www web/dist --data /path/to/WoW/Data
+# tab A: http://127.0.0.1:8090/            → press Host, copy the code
+# tab B: http://127.0.0.1:8090/            → paste it, press Join
+# tab A: paste tab B's reply code, press Join
+```
+
+Both tabs should log `survivors coop: session Host as OwnerId(0)` / `Guest as OwnerId(1)`, then
+`peer OwnerId(1) joined (class N, display M)`. Walk in either tab and the other's body should walk
+too, facing the same way. `?coop=0` disables the panel; `?bridge=0` rules the bridge out if
+something else is suspected.
+
 Next, in the §11.1 order:
 
-1. **P3.** `survivors/coop.rs` reads `window.__wenilla_net` once a frame (the `webbridge`
-   idiom), sends the local input packet, and applies peer transforms to `PartyMember`
-   entities spawned through the existing `units::spawn_unit` path. Plus the lobby UI: Host /
-   Join, a textarea for the code, and the party's roles. This is where `PartyMember` and
-   `OwnerId` finally get introduced — deliberately deferred from P2 so that step stayed a
-   pure refactor with no dead code for CI's `-D warnings` clippy to trip over.
-2. **P4.** Gate `spawn_enemies` / `move_enemies` / `apply_hits` on `is_host` and replicate.
+1. **P4.** Gate `spawn_enemies` / `move_enemies` / `apply_hits` on `is_host` and replicate the
+   spawns, deaths, health and casts, so both peers fight the *same* horde instead of two. This is
+   also where `Wave` earns its keep: the host's `elapsed` and `next_guid` become the authority,
+   and a client stops advancing its own.
+2. **P5.** 3–5 players: the host assigns ids and the party is tracked as a set rather than the
+   fixed host-0/guest-1 pair.
 
 Two things to do first, both cheap and both prerequisites for trusting any of it:
 
