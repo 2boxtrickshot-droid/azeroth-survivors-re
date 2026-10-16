@@ -266,13 +266,13 @@ choice, invite/join handshake).
 
 **Invites without a server.** Two acceptable v1 mechanisms:
 
-- **Manual copy/paste:** host generates an offer (SDP + ICE candidates, compressed into a
-  base64 blob), sends it out of band (Discord), joiner pastes it and returns an answer
-  blob. Zero infrastructure, works today, ugly but shippable for a first milestone.
-- **A tiny "signaling relay" page**: a static HTML page on any static host with no game
-  logic, whose only job is to swap two opaque blobs. This is not a game server and holds
-  no game state. Acceptable if manual paste is too rough; note it in the doc so the "no
-  dedicated server" rule stays honest.
+- **Manual copy/paste (M0's choice):** the host gathers ICE to completion
+  (**non-trickle / vanilla ICE** — `icegatheringstate === 'complete'`), serialises the whole
+  offer into one blob (gzip + base64), and sends it out of band. The joiner pastes it and
+  returns one answer blob. One paste each way, not one per candidate. Zero infrastructure.
+- **A signaling page (later, designed for but not built):** a static page whose only job is
+  to swap two opaque blobs. It holds no game state and runs no simulation. §11.3 says how
+  `web/net.js` is shaped so this is a new `Signal` implementation and not a refactor.
 
 **Rate/ownership:**
 
@@ -443,19 +443,189 @@ This repo is `2boxtrickshot-droid/azeroth-survivors-re`, has no `wenilla-realm` 
 `crates/benilla-app/tests/web_assets.rs` asserts against that path). Anyone (or any agent)
 following `AGENTS.md` literally will look for files and a PR target that are not here.
 
-### Open questions for the user
+### Decisions taken (M0)
 
-1. **Host migration?** If the host quits, does the run end (simplest, recommend for v1), or
-   does another peer take over?
-2. **Level-up: local or shared?** Per-player builds (each player picks their own cards,
-   current `Run` model extended per member) vs a shared party card pool. Per-player is
-   assumed above and is the stronger design.
-3. **Invite mechanism:** manual paste, or a signaling relay page? This decides whether
-   anything at all is deployed.
-4. **Tank aggro model:** a real threat table (WoW-like, more work, more depth) or a
-   proximity/taunt flag (cheap, readable on screen)?
-5. **Roster/scale:** is the goal 3–5 players in one of the existing 16 battlegrounds, or a
-   new purpose-built co-op arena?
-6. **Upstream relationship:** keep merging `benilla` upstream into this fork (the
-   `AGENTS.md`/`docs/UPSTREAM.md` discipline), or freeze the engine and treat this as a
-   game on top? This changes how aggressively we may refactor `benilla-app` internals.
+Settled by the project owner. §11 works out what each one costs.
+
+1. **Host migration: none.** The run ends when the host quits or drops. Revisit later; it is
+   complexity the first playable version does not need.
+2. **Level-ups: per player.** Each player earns XP and picks their own upgrades, so one
+   player's choice never interrupts the party. This is what forces the global
+   `Time<Virtual>` pause out of `Phase::LevelUp` (§7.2 constraint 2).
+3. **Invites: manual-paste join codes.** No signaling site in M0. The connection layer is
+   shaped so a proper invite page can be added later without a rewrite (§11.3).
+4. **Tank threat: a real threat table.** Enemies prioritise the tank once it has established
+   threat, with sensible fallback when there is no tank. Proximity taunting is a tank
+   *ability*, not the whole aggro system.
+5. **Arena: a dedicated co-op arena.** Do not force co-op into the existing battlegrounds
+   before their suitability is known; reuse existing maps, assets and systems where practical.
+6. **Upstream: keep merging when practical, but not at the cost of the architecture.** Keep
+   `benilla-app` changes modular, document intentional divergences, avoid wholesale
+   refactoring, and resolve conflicts deliberately rather than blindly.
+7. **Priority order:** prove connect → move → see each other → share enemy/combat state
+   first. Then 3–5 players, then roles, then full co-op runs.
+8. **Connectivity:** manual paste still needs a peer-to-peer path, and possibly a relay for
+   restrictive routers. Chosen from this repo's actual setup in §11.3 — not assumed.
+
+---
+
+## 11. M0 decisions in detail
+
+### 11.1 The revised sequence
+
+The priority order in §10.7 (connect → move → see each other → share enemy/combat state,
+*then* 3–5 players, *then* roles) reorders §9's milestones: roles stop being a prerequisite
+for connecting and become a later step. The revised path:
+
+| step | what | why here |
+|---|---|---|
+| **P1** | the connection layer (§11.3) | nothing else is provable without it |
+| **P2** | the party refactor: `Run` → `SharedRun` + per-member `HeroRun`, `Hero` → `PartyMember` | required by *every* later step; no player-visible change |
+| **P3** | two peers: move, face, see each other | the first thing worth showing anyone |
+| **P4** | shared enemy and combat state, host-authoritative | the first thing worth *playing* |
+| **P5** | 3–5 players | scale, once two are solid |
+| **P6** | roles become mechanical: threat table (§11.4), ally-targeted heals, DPS scaling | needs P4's authority model to exist |
+| **P7** | the co-op arena (§11.2), elites, party-scaled waves, shared boss HP | content on top of a working party |
+| **P8** | loot and persistent progression | the roguelite meta layer |
+
+Roles exist as **data** from P2 (the `Role` enum and `ClassDef::role` are in the tree now, and
+the pick screen shows them), but they do not change behaviour until P6. That keeps P2 a pure
+refactor.
+
+### 11.2 The co-op arena
+
+Per decision 5, co-op gets its own `MapDef` rather than a borrowed battleground, but it reuses
+everything else. Concretely, as a new **last** entry in `data::MAPS`:
+
+- a `coop_only: bool` field on `MapDef` (false for the existing sixteen, true for the arena),
+  filtered out of the single-player zone list in `menu.rs` so **solo play is unchanged**;
+- `map` and `center` taken from a **proven** entry (the Barrens' `[-950.0, -2700.0, 92.0]` is
+  the safe start — `MAPS[0]` already stands there, so the ground is known good), to be moved
+  to a purpose-chosen spot once someone can eyeball the terrain in a browser;
+- its own `foes`/`bosses` ladders, which `ladder()` numbers off the Barrens tuning for free;
+- a party-scaled wave clock (§P7), which is where the arena actually differs from a
+  battleground: the spawner is tuned for N players, not one.
+
+This is deliberately the *last* content step, because the arena's real content — packs that
+need a tank to hold, elites that need a healer, waves that need DPS — cannot be designed
+until roles are mechanical (P6).
+
+### 11.3 Connectivity: the decision, and the evidence for it
+
+The question was whether a join code is enough, or whether a relay/signaling service is
+needed. **The code is not enough by itself, and the repo's existing relay cannot be it.**
+Reading the actual setup:
+
+| fact | where | consequence |
+|---|---|---|
+| A page cannot listen on a socket. | `benilla-protocol/src/transport/mod.rs` header | P2P must be WebRTC; a socket-based host is not available to a browser. |
+| `wenilla-host`'s only network feature is `GET /ws/{port}`, an allowlist TCP proxy for **3724 and 8085 only**, dialing a fixed `--upstream`. | `wenilla-host/src/lib.rs` (`ALLOWED_PORTS`), `src/ws.rs` | It is not a message relay and cannot be repurposed without breaking its security boundary. |
+| `wenilla-host` is documented as a **local development tool** that "must never be exposed on the open internet" — `/data` hands out the game files unauthenticated. | `wenilla-host/src/main.rs` doc + `--help` + the non-loopback warning | It cannot host co-op signaling, and it cannot be the peer everyone dials. |
+| There is **no WebRTC anywhere**, and the wasm32 `web-sys` feature lists (`benilla-app`, `benilla-protocol`) stop at `Window`/`Location`/`Storage`/audio. | `Cargo.toml` of both crates; zero `RtcPeerConnection` hits | Owning WebRTC in Rust means widening a pinned dependency surface for something the page does natively. So: **JS owns the transport** (`web/net.js`), the wasm owns the game. |
+| Cross-origin isolation is already on (`COOP: same-origin`, `COEP: require-corp`). | `wenilla-host/src/static_site.rs` | `crossOriginIsolated` is true. WebRTC does not need it, but COOP severs `window.opener` — so a future signaling page must be reached by `fetch`/WebSocket, **not** embedded in an iframe. |
+| WebGPU requires a secure context (`localhost` or https). | `web/README.md` | Any hosted co-op page is https anyway, which WebRTC also wants. The two constraints agree. |
+| wasm is single-threaded and event-loop driven; `std::time::Instant` panics there. | `docs/COOP-PLAN.md` §7.2(5), `benilla-app/Cargo.toml` | Signaling must be non-blocking; the once-a-frame `Reflect.get` idiom the bridge already uses is the pattern. |
+| No `serde_json` in the shipped app; the bridge uses plain objects and `PlainValue`. | `webbridge/mod.rs` header; `serde_json` is dev-only | The wire format is plain objects now, hand-rolled binary later. |
+
+**Decision:**
+
+1. **Transport: WebRTC `RTCDataChannel`, one connection per pair, host-authoritative star.**
+2. **Signaling: manual paste, non-trickle ICE.** The host waits for `icegatheringstate ===
+   'complete'` before reading `localDescription`, so every candidate is already inside the
+   SDP and **one blob each way is enough**. Trickle ICE would mean one paste per candidate —
+   unusable. Implemented in `web/net.js` (`encodeCode`/`decodeCode`).
+3. **STUN by default; TURN as a settings value.** Public STUN is address discovery, not a game
+   server. **TURN is a relay and is infrastructure** — some pairs (symmetric NAT, strict
+   corporate firewalls) cannot connect without it. M0 ships with `turn: []` and must *say so*
+   in the lobby rather than hang; the field exists so a player or a future page can fill it.
+4. **No hosting needed for M0.** Each peer runs its own local `wenilla-host` for its own wasm
+   and game data; only gameplay state crosses the DataChannel. Assets stay local on both
+   sides, which is why a peer-to-peer mesh is viable at all.
+5. **The seam for a later signaling page is `Signal`.** `LocalSignal` (paste) is M0; a
+   `RelaySignal(url)` posting/polling the same opaque blobs is a second implementation, not a
+   refactor. Nothing else in `web/net.js` knows how a code travels.
+
+**Stated plainly, because it is a real limit:** the join code is DTLS-encrypted but not
+*authenticated* — whoever carries the blob between the two players could in principle
+substitute their own. That is acceptable for playing with friends over a chat channel, and it
+is the same trust model the paste itself implies. A signaling page should add a fingerprint
+the players compare out of band; that is noted here so it is not forgotten.
+
+**Not load-bearing, in the house posture:** the page imports `web/net.js` dynamically, every
+entry point feature-detects, and every failure is swallowed. A browser with no WebRTC plays
+single-player exactly as it does today. The wasm finds `window.__wenilla_net` or finds
+nothing; the absent case costs one `Reflect.get` per frame, the same as the bridge's.
+
+### 11.4 The threat table (P6)
+
+Decision 4: a real threat table, with a proximity taunt as a tank *ability* rather than the
+whole system. The shape that fits this codebase:
+
+- **Where it lives:** one `Threat` resource, `HashMap<(Entity /*enemy*/, Entity /*member*/),
+  f32>`. It is **host-side only** — a client never needs it, because it only renders whichever
+  member the enemy is chasing. That keeps it out of the wire format entirely.
+- **Generation:** damage dealt adds threat equal to the damage, scaled by a per-role
+  multiplier (tank high, DPS low, healer a flat fraction of healing done so healing pulls
+  aggro the way it does in the source game). The multiplier belongs next to `Role`, so it is
+  one table to tune.
+- **Selection:** `move_enemies` today does `hero.single()` and walks straight at it. It becomes
+  `target_of(enemy, &party, &threat)`, which returns the highest-threat living member within
+  range; **fallbacks in order:** nearest member if no threat has been generated yet, nearest
+  member if there is no tank in the party, nearest member if the tank is dead. That satisfies
+  "sensible fallback when the tank is absent or unavailable" without a special case per
+  situation.
+- **Taunt as an ability:** a new `Effect::Taunt` (or a `Kind`) that sets the caster's threat to
+  the table's current maximum across the affected enemies — which is what a proximity taunt
+  actually is. `Effect` already carries `Slow/Root/Stun/Fear/Weaken/Drain/Execute`, so this is
+  one more arm and one more line in `apply_hits`.
+- **Decay:** threat decays on the same timer as the existing `marks`/`dots` bookkeeping, so a
+  tank that stops hitting things loses the pack — otherwise the table becomes a permanent
+  leash and the DPS role stops mattering.
+
+### 11.5 What is in the tree now, and what is next
+
+Landed with this document:
+
+- `crates/benilla-app/src/survivors/data.rs` — `Role { Tank, Healer, Dps }` with `label()`, a
+  `role` field on `ClassDef`, and a role for all nine classes: Warrior/Paladin Tank,
+  Priest/Druid Healer, Hunter/Rogue/Shaman/Mage/Warlock DPS. Solo play is unaffected; the
+  field is data only.
+- `crates/benilla-app/src/survivors/menu.rs` — the pick screen names the role, e.g.
+  "Human Warrior — Tank". This is also what keeps the new enum used, so
+  `cargo clippy --workspace --all-targets -- -D warnings` (`.github/workflows/ci.yml`) stays
+  green.
+- `web/net.js` — the connection layer: the join-code codec, the `LocalSignal` seam, the
+  `Net` session (host/join/deliver, a reliable `ev` channel and an unreliable `snap` channel,
+  `inbox`/`send`/`sendFast` for the wasm), `iceConfig` with STUN-by-default and a TURN field,
+  and the guarded `window.__wenilla_net` handle.
+- `web/tests/net.test.mjs` — 8 tests over the parts that are pure logic and decide whether a
+  session can work at all: the codec round-trip, stale/wrong/garbage codes, the encoder
+  refusing to emit what it could not read, the one-tank/one-healer party rule, ICE defaults,
+  and the signal→session path. Run with `node --test web/tests/*.test.mjs`.
+- `scripts/web-build.sh` — `web/net.js` added to the `cp` line. **This is load-bearing:** a
+  page file that is not on that line never reaches `web/dist`, so never reaches the browser.
+- `docs/COOP-PLAN.md` — this document.
+
+Next, in the §11.1 order:
+
+1. **P2, the party refactor.** The `Role` data is in place; now `Run` splits and `Hero` becomes
+   `PartyMember`. This is the largest and least visible step, and it should land as its own
+   change with single-player behaviour compared before and after (the `WOW_SURVIVORS_AUTO`
+   autopilot makes that mechanical).
+2. **P3.** `survivors/coop.rs` reads `window.__wenilla_net` once a frame (the `webbridge`
+   idiom), sends the local input packet, and applies peer transforms to `PartyMember`
+   entities spawned through the existing `units::spawn_unit` path. Plus the lobby UI: Host /
+   Join, a textarea for the code, and the party's roles.
+3. **P4.** Gate `spawn_enemies` / `move_enemies` / `apply_hits` on `is_host` and replicate.
+
+Two things to do first, both cheap and both prerequisites for trusting any of it:
+
+- **Establish the build baseline.** The wasm check
+  (`cargo check --target wasm32-unknown-unknown -p wenilla --no-default-features --features webgpu`)
+  is the CI gate and is runnable without game data; the native
+  `cargo check --workspace --all-targets` needs `libasound2-dev`/`libudev-dev` and was **not**
+  possible in the sandbox this was written in. Run both before P2.
+- **Note the pre-existing web test failure.** `node --test web/tests/boot.test.mjs` fails 6/6
+  in this sandbox on a pristine checkout (`git stash` → same result), so it is not caused by
+  anything here. It is worth a look on a normal machine, since `.github/workflows/check.yml`
+  runs it.

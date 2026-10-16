@@ -711,7 +711,7 @@ pub(super) fn refresh_menu_ui(
     let class = selection.class_def();
     if let Ok((mut t, mut color)) = name.single_mut() {
         let want = match (class, cur) {
-            (Some(c), Some((r, _))) => format!("{} {}", race_name(r), c.name),
+            (Some(c), Some((r, _))) => format!("{} {} — {}", race_name(r), c.name, c.role.label()),
             _ => String::new(),
         };
         if t.0 != want {
