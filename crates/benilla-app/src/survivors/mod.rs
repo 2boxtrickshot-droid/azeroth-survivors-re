@@ -7,6 +7,7 @@
 mod abilities;
 mod auto;
 mod cards;
+mod coop;
 mod data;
 mod enemies;
 mod grade;
@@ -44,6 +45,7 @@ impl Plugin for SurvivorsPlugin {
             .init_resource::<Selection>()
             .init_resource::<Run>()
             .init_resource::<Wave>()
+            .init_resource::<coop::Coop>()
             .init_resource::<hero::CamRig>()
             .init_resource::<hero::AimPoint>()
             .init_resource::<abilities::PendingHits>()
@@ -84,6 +86,15 @@ impl Plugin for SurvivorsPlugin {
                     .run_if(in_state(Phase::Playing))
                     // Entering a battleground raises its loading screen: the run waits behind it.
                     .run_if(|l: Res<crate::loading_screen::LoadingScreen>| !l.covering()),
+            )
+            // Co-op: the page's session, read once a frame and written back on a timer. Inert
+            // with no page (`web/net.js` absent, or no session negotiated, reads as `Mode::Off`),
+            // so single-player pays one `Reflect::get` a frame and nothing else.
+            .add_systems(
+                Update,
+                (coop::sync_mode, coop::receive, coop::send_self)
+                    .chain()
+                    .after(WorldStage::Input),
             )
             .add_systems(
                 Update,

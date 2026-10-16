@@ -92,6 +92,12 @@
       }
     })
     .catch((e) => console.warn('bridge.js:', e));
+  // Co-op (web/net.js + web/lobby.js): WebRTC data channels and the Host/Join panel. Dynamic and
+  // never load-bearing — a page that skips it, or a browser with no WebRTC, plays single-player.
+  // `?coop=0` turns the panel off for a session.
+  if (new URLSearchParams(location.search).get('coop') !== '0') {
+    import('./lobby.js').catch((e) => console.warn('lobby.js:', e));
+  }
   const w = await boot(init);
   bind(w.memory);
 </script>
