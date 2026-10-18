@@ -52,3 +52,9 @@ __pycache__/
 # The C sysroot for the wasm Lua build — fetched by scripts/web-setup.sh, ~300 MB
 /tools/wasi-sdk/
 /tools/binaryen/
+
+# Private co-op build products and Node dependencies.
+/web/coop/pkg/
+/scripts/coop/node_modules/
+
+web/coop/data-pkg/

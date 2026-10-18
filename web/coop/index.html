@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Azeroth Survivors · Private party</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="arena" aria-label="Survival arena"></canvas>
+<iframe id="world" allow="fullscreen 'none'" title="Original Bevy world" hidden></iframe>
+<div id="plates" aria-hidden="true"></div>
+<header><div class="brand">AZEROTH <span>SURVIVORS</span><small>PRIVATE PARTY · ELWYNN WATCH</small></div><div id="connection" role="status">Preparing the arena…</div></header>
+<main id="menu" class="panel">
+<p class="eyebrow">ONE PARTY. ENDLESS PRESSURE.</p><h1>Hold the forest.</h1>
+<p class="intro">Gather your friends. Cut through the horde.<br>Survive six minutes and defeat all three commanders.</p>
+<label>WoW 1.12.1 Data folder<input id="data-picker" type="file" webkitdirectory multiple></label>
+<p id="data-status" role="status">Select your own Data folder. Archives are read locally, never uploaded.</p>
+<label>Your name<input id="name" maxlength="20" value="Adventurer" autocomplete="nickname"></label>
+<div class="label">Choose a specialization</div><div id="builds" class="builds"></div>
+<div id="build-info" class="info"></div>
+<div class="actions"><button id="host" class="primary" disabled>Host Game</button><button id="join" disabled>Join Game</button></div>
+<label>Guest invite link<input id="invite" placeholder="Paste your friend’s invite here" autocomplete="off" spellcheck="false"></label>
+<details><summary>Website access and requirements</summary><p>Use Chrome or Edge with WebGPU. Every player selects their own WoW 1.12.1 Data folder on each visit. Keep the host browser open. Share the guest invite from the lobby. This website supports one private party at a time.</p><label>Host access code (if configured by the website owner)<input id="site-key" type="password" autocomplete="off"></label></details>
+<p id="menu-error" class="error" role="alert"></p><p class="footnote">WASD / arrows to move · F for your class ability · Enter to chat<br>Automatic attacks · Stay near fallen allies for 4 seconds to revive</p>
+</main>
+<section id="lobby" class="panel" hidden>
+<p class="eyebrow">PRIVATE PARTY · UP TO FIVE</p><h1>The watch gathers.</h1>
+<p>Tank, healer, or an unusual combination — every party is welcome.</p>
+<div id="lobby-members"></div>
+<div id="host-invite" hidden><label>Your reachable address<input id="public-address" placeholder="https://your-host:8787"></label><p class="hint">Use your public IP / hostname or private VPN address. This is the party server address. Friends open the same website and select their own Data folder.</p><button id="copy-invite">Copy guest invite</button><textarea id="share" rows="2" readonly aria-label="Guest invite"></textarea></div>
+<p id="world-status" role="status"></p><div id="talents-lobby"></div>
+<div class="actions"><button id="start" class="primary">Begin the run</button><button class="leave">Leave party</button></div><p id="waiting">Waiting for the host to begin…</p>
+</section>
+<aside id="party" class="panel" hidden><div class="eyebrow">YOUR PARTY</div><div id="roster"></div><button class="leave quiet">Leave session</button></aside>
+<section id="hud" hidden><div id="run-clock"></div><div id="bosses"></div><div id="vitals" class="panel"></div><div id="progress" class="panel"></div><div id="ability" class="panel"></div></section>
+<section id="choices" class="panel" hidden><div class="eyebrow">LEVEL UP · THE BATTLE CONTINUES</div><h2>Choose your next advantage</h2><div id="upgrade-list"></div><div id="talents-run"></div></section>
+<section id="chat" class="panel" hidden><div class="eyebrow">PARTY CHAT</div><div id="messages" role="log" aria-live="polite"></div><form id="chat-form"><input id="chat-input" placeholder="Enter to chat · Esc to close" maxlength="280" autocomplete="off" aria-label="Party message"><button>Send</button></form></section>
+<section id="results" class="panel" hidden><p class="eyebrow">THE WATCH ENDS</p><h1 id="result-title"></h1><div id="result-body"></div><div class="actions"><button id="again" class="primary">Return to lobby</button><button class="leave">Leave party</button></div><p id="result-wait">Waiting for the host to return to the lobby.</p></section>
+<script type="module" src="app.js"></script>
+</body></html>

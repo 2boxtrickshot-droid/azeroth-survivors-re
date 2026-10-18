@@ -563,6 +563,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "azeroth-coop"
+version = "0.2.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "azeroth-data"
+version = "0.2.0"
+dependencies = [
+ "benilla-mpq",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "base64"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -592,6 +609,7 @@ dependencies = [
  "assert_no_alloc",
  "async-channel",
  "avian3d",
+ "azeroth-coop",
  "benilla-assets",
  "benilla-formats",
  "benilla-protocol",
@@ -713,6 +731,8 @@ version = "0.2.0"
 dependencies = [
  "benilla-bytes",
  "flate2",
+ "js-sys",
+ "wasm-bindgen",
 ]
 
 [[package]]

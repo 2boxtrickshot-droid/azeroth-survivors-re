@@ -7,6 +7,8 @@
 mod abilities;
 mod auto;
 mod cards;
+#[cfg(target_arch = "wasm32")]
+mod coop;
 mod data;
 mod enemies;
 mod grade;
@@ -36,6 +38,11 @@ pub(crate) struct SurvivorsPlugin;
 
 impl Plugin for SurvivorsPlugin {
     fn build(&self, app: &mut App) {
+        #[cfg(target_arch = "wasm32")]
+        if crate::webenv::var("WOW_COOP").as_deref() == Some("1") {
+            coop::plugin(app);
+            return;
+        }
         // Present before `OnEnter(InWorld)`, where the UI lifecycle decides not to load FrameXML.
         app.insert_resource(crate::run_mode::CaptureMode)
             .add_plugins(grade::plugin)

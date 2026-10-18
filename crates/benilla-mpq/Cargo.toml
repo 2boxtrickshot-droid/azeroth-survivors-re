@@ -13,3 +13,10 @@ workspace = true
 benilla-bytes = { path = "../benilla-bytes" }
 # Inflate for the ZLIB (0x02) sector codec, on its pure-Rust miniz_oxide backend.
 flate2 = "1.1"
+
+[features]
+browser-files = ["dep:wasm-bindgen", "dep:js-sys"]
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = { version = "=0.2.122", optional = true }
+js-sys = { version = "0.3", optional = true }
