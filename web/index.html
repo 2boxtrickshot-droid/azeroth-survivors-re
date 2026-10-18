@@ -1,5 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
+<script src="local-data-xhr.js"></script>
 <title>Azeroth Survivors</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
@@ -32,6 +33,7 @@
         }
       }
     };
+    window.__azeroth_resume_audio = resume;
     for (const ev of ['pointerdown', 'keydown', 'touchstart']) {
       window.addEventListener(ev, resume, { capture: true, passive: true });
     }
@@ -59,11 +61,44 @@
   }
 </script>
 <canvas id="benilla"></canvas>
+<a id="coop-link" hidden href="coop/" style="position:fixed;right:16px;top:16px;z-index:9999;color:#e4d3a1;background:#13251e;padding:10px 16px;text-decoration:none">Private co-op arena</a>
+<script>
+  if (new URLSearchParams(location.search).get('coop') === '1') {
+    document.getElementById('coop-link').remove();
+  } else {
+    fetch('coop/pkg/azeroth_coop_bg.wasm', { method: 'HEAD' })
+      .then(r => { if (r.ok) document.getElementById('coop-link').hidden = false; })
+      .catch(() => {});
+  }
+</script>
 <script>
   // Dev page: allow `?user=&pass=&char=` links to log in. A hosting page that fetched the
   // credentials itself sets `window.__wenilla_env = {user, pass, host}` here instead, and the
   // client then never reads credentials from the URL (`benilla_app::webenv`).
-  window.__wenilla_env = { dev_query_creds: '1' };
+  window.__wenilla_env = { dev_query_creds: '1', ...(new URLSearchParams(location.search).get('coop') === '1' ? { gxwindow: '1', gxmaximize: '0', gxresolution: `${innerWidth}x${innerHeight}`, farclip: '177' } : {}) };
+</script>
+<script>
+  // Co-op must keep combat blocked and explain a failed renderer to the party member.
+  if (new URLSearchParams(location.search).get('coop') === '1') {
+    let closing = false;
+    addEventListener('pagehide', () => { closing = true; });
+    const report = message => {
+      if (!closing && parent !== window) {
+        parent.__azeroth_coop_error ||= String(message).slice(0, 400);
+        parent.__azeroth_coop_ready = false;
+      }
+    };
+    addEventListener('error', event => report(event.message || 'The 3D renderer stopped. Reload the client.'));
+    addEventListener('unhandledrejection', event => report(event.reason));
+    if (window.GPUAdapter) {
+      const request = GPUAdapter.prototype.requestDevice;
+      GPUAdapter.prototype.requestDevice = async function (...args) {
+        const device = await request.apply(this, args);
+        device.lost.then(info => { if (info.reason !== 'destroyed') { console.error('3D GPU device lost:', info.message); report(`3D graphics device lost: ${info.message}. Reload with hardware acceleration enabled.`); } });
+        return device;
+      };
+    }
+  }
 </script>
 <script type="module">
   import init from './wenilla.js';

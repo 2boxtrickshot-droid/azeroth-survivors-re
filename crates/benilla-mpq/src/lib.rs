@@ -12,7 +12,12 @@
 //! Every allocation sized from a header count or a sector length is capped by the file's size, so
 //! a lying header fails with [`Error::Corrupt`].
 
+#[cfg(not(all(target_arch = "wasm32", feature = "browser-files")))]
 use std::fs::File;
+#[cfg(all(target_arch = "wasm32", feature = "browser-files"))]
+mod browser_file;
+#[cfg(all(target_arch = "wasm32", feature = "browser-files"))]
+use browser_file::File;
 use std::io::{self, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;

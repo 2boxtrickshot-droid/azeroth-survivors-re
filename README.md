@@ -1,3 +1,7 @@
+> **Browser-only co-op:** players select their own WoW Data folder on the website. See [docs/BROWSER-COOP.md](docs/BROWSER-COOP.md) for deployment and local testing.
+
+> **Windows co-op:** installation, launchers and friend setup are in [docs/WINDOWS-COOP.md](docs/WINDOWS-COOP.md).
+
 <img width="1920" height="1080" alt="brag" src="https://github.com/user-attachments/assets/fa574bb6-7bd4-4e78-8b72-14c58e3c716e" />
 
 <div align="center">
@@ -46,6 +50,24 @@ minutes. **No server, no login, no account** — fully offline and self-containe
 - **A camera you can free:** locked top-down by default with the hero facing the cursor. **C**
   unlocks it to swing and tilt, and the wheel zooms from over the shoulder out to 70 yards.
 - A light sharpen-and-colour pass over the picture (**G** toggles it).
+
+## Private online co-op
+
+The original **Bevy 3D world** now has a private-party mode for **1–5 players**, with the host running the Rust game simulation,
+shared enemies and bosses, party chat, nameplates, threat, healing and independent upgrades.
+Start with [the co-op launch and networking guide](docs/COOP.md). It has no paid backend or
+recurring multiplayer service cost; internet play needs a reachable host PC or a working private
+network. The original solo game below is preserved. The initial co-op roster is Warrior, Shaman
+and Mage with six specializations; the other solo classes have not been ported to co-op.
+
+```bash
+scripts/web-setup.sh
+scripts/coop-build.sh
+scripts/web-build.sh
+cargo build --release -p wenilla-host
+node scripts/coop/play.mjs /path/to/WoW/Data --host
+# Friends run the same local client without --host, then open the guest invite.
+```
 
 ## Play it
 
